@@ -31,13 +31,25 @@ class VoterApiController extends Controller
     }
 
     /**
+     * Get detail of a single voter.
+     */
+    public function show(Voter $voter)
+    {
+        return response()->json([
+            'success' => true,
+            'data'    => $voter->load('tps'),
+        ]);
+    }
+
+    /**
      * Add new voter manually via API.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'tps_id' => 'required|exists:tps,id',
-            'nama'   => 'required|string|max:255',
+            'tps_id'       => 'required|exists:tps,id',
+            'nama'         => 'required|string|max:255',
+            'is_supporter' => 'nullable|boolean',
         ], [
             'tps_id.required' => 'Pilih TPS terlebih dahulu.',
             'tps_id.exists'   => 'TPS tidak valid.',
@@ -47,7 +59,7 @@ class VoterApiController extends Controller
         $voter = Voter::create([
             'tps_id'       => $request->tps_id,
             'nama'         => $request->nama,
-            'is_supporter' => false,
+            'is_supporter' => $request->has('is_supporter') ? (bool) $request->is_supporter : false,
         ]);
 
         return response()->json([
@@ -55,6 +67,49 @@ class VoterApiController extends Controller
             'message' => 'Pemilih berhasil ditambahkan.',
             'data'    => $voter->load('tps'),
         ], 201);
+    }
+
+    /**
+     * Update voter data via API.
+     */
+    public function update(Request $request, Voter $voter)
+    {
+        $request->validate([
+            'tps_id'       => 'sometimes|required|exists:tps,id',
+            'nama'         => 'sometimes|required|string|max:255',
+            'is_supporter' => 'nullable|boolean',
+        ], [
+            'tps_id.required' => 'Pilih TPS terlebih dahulu.',
+            'tps_id.exists'   => 'TPS tidak valid.',
+            'nama.required'   => 'Nama pemilih wajib diisi.',
+        ]);
+
+        $voter->fill($request->only(['tps_id', 'nama']));
+
+        if ($request->has('is_supporter')) {
+            $voter->is_supporter = (bool) $request->is_supporter;
+        }
+
+        $voter->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data pemilih berhasil diperbarui.',
+            'data'    => $voter->fresh('tps'),
+        ]);
+    }
+
+    /**
+     * Delete a single voter via API.
+     */
+    public function destroy(Voter $voter)
+    {
+        $voter->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data pemilih berhasil dihapus.',
+        ]);
     }
 
     /**
@@ -98,6 +153,31 @@ class VoterApiController extends Controller
             'is_supporter' => $isSupporter,
             'updated_count'=> $count,
             'message'      => "Berhasil memperbarui {$count} pemilih menjadi {$statusText}.",
+        ]);
+    }
+
+    /**
+     * Bulk delete voters.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'voter_ids'   => 'required|array',
+            'voter_ids.*' => 'exists:voters,id',
+        ], [
+            'voter_ids.required' => 'Pilih minimal satu pemilih untuk dihapus.',
+            'voter_ids.*.exists' => 'Salah satu pemilih tidak ditemukan.',
+        ]);
+
+        $voterIds = $request->voter_ids;
+        $count    = count($voterIds);
+
+        Voter::whereIn('id', $voterIds)->delete();
+
+        return response()->json([
+            'success'       => true,
+            'deleted_count' => $count,
+            'message'       => "Berhasil menghapus {$count} data pemilih.",
         ]);
     }
 
@@ -162,3 +242,4 @@ class VoterApiController extends Controller
         ]);
     }
 }
+

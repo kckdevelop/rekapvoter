@@ -54,8 +54,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Voters ──────────────────────────────────────────────────────────────
     Route::get('/voters',                      [VoterApiController::class, 'index']);
     Route::post('/voters',                     [VoterApiController::class, 'store']);
-    Route::post('/voters/{voter}/toggle',      [VoterApiController::class, 'toggleSupporter']);
     Route::post('/voters/bulk-supporter',      [VoterApiController::class, 'bulkSupporter']);
+    Route::post('/voters/bulk-delete',         [VoterApiController::class, 'bulkDelete']);
+    Route::delete('/voters/bulk-delete',       [VoterApiController::class, 'bulkDelete']);
+    Route::get('/voters/{voter}',              [VoterApiController::class, 'show']);
+    Route::match(['put', 'patch', 'post'], '/voters/{voter}', [VoterApiController::class, 'update']);
+    Route::delete('/voters/{voter}',           [VoterApiController::class, 'destroy']);
+    Route::post('/voters/{voter}/delete',      [VoterApiController::class, 'destroy']);
+    Route::post('/voters/{voter}/toggle',      [VoterApiController::class, 'toggleSupporter']);
 
     // ── Supporters & Reports ─────────────────────────────────────────────────
     Route::get('/supporters', [VoterApiController::class, 'supporters']);
