@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Candidate;
 use App\Models\Tps;
-use App\Models\TpsCandidateResult;
+use App\Models\TpsQuickCandidateResult;
 use App\Models\Voter;
 use Illuminate\Http\Request;
 
-class RealCountApiController extends Controller
+class QuickCountApiController extends Controller
 {
     /**
-     * Rekapitulasi Real Count: perolehan suara per TPS vs target pendukung.
-     * GET /api/realcount
+     * Rekapitulasi Quick Count: perolehan suara per TPS vs target pendukung.
+     * GET /api/quickcount
      */
     public function index(Request $request)
     {
@@ -21,12 +21,13 @@ class RealCountApiController extends Controller
         $candidates = Candidate::orderBy('nomor_urut')->get();
         $mainCandidate = $candidates->firstWhere('is_main_candidate', true);
 
-        $query = Tps::with(['candidateResults.candidate'])
+        $query = Tps::with(['quickCandidateResults.candidate'])
             ->withCount([
                 'voters',
                 'voters as supporters_count' => fn($q) => $q->where('is_supporter', true),
             ]);
 
+        // Jika saksi login, batasi ke TPS miliknya
         if ($user && $user->isSaksi() && $user->tps_id) {
             $query->where('id', $user->tps_id);
         }
@@ -34,10 +35,10 @@ class RealCountApiController extends Controller
         $rekapTps = $query->orderBy('nama_tps')
             ->get()
             ->map(function ($tps) use ($candidates, $mainCandidate) {
-                $suaraReal      = $tps->suara_kandidat ?? 0;
+                $suaraReal       = $tps->quick_suara_kandidat ?? 0;
                 $targetPendukung = $tps->supporters_count ?? 0;
-                $selisih        = $suaraReal - $targetPendukung;
-                $pctKonversi    = $targetPendukung > 0
+                $selisih         = $suaraReal - $targetPendukung;
+                $pctKonversi     = $targetPendukung > 0
                     ? round(($suaraReal / $targetPendukung) * 100, 1)
                     : ($suaraReal > 0 ? 100 : 0);
 
@@ -45,8 +46,8 @@ class RealCountApiController extends Controller
                 $maxOpponentVote = 0;
                 $perolehanPerKandidat = [];
                 foreach ($candidates as $cand) {
-                    $res    = $tps->candidateResults->firstWhere('candidate_id', $cand->id);
-                    $votes  = $res ? $res->jumlah_suara : 0;
+                    $res   = $tps->quickCandidateResults->firstWhere('candidate_id', $cand->id);
+                    $votes = $res ? $res->jumlah_suara : 0;
                     $perolehanPerKandidat[] = [
                         'candidate_id'      => $cand->id,
                         'nomor_urut'        => $cand->nomor_urut,
@@ -59,11 +60,11 @@ class RealCountApiController extends Controller
                     }
                 }
 
-                $suaraSah  = $tps->suara_sah ?? ($suaraReal + ($tps->suara_lawan ?? 0));
+                $suaraSah   = $tps->quick_suara_sah ?? ($suaraReal + ($tps->quick_suara_lawan ?? 0));
                 $pctSuaraSah = $suaraSah > 0 ? round(($suaraReal / $suaraSah) * 100, 1) : 0;
 
                 // Status keberhasilan target
-                if (!$tps->is_submitted) {
+                if (!$tps->quick_is_submitted) {
                     $statusTarget = 'belum_input';
                 } elseif ($targetPendukung === 0) {
                     $statusTarget = $suaraReal > 0 ? 'surplus_tanpa_target' : 'belum_ada_target';
@@ -78,7 +79,7 @@ class RealCountApiController extends Controller
                 }
 
                 // Status kemenangan
-                if (!$tps->is_submitted) {
+                if (!$tps->quick_is_submitted) {
                     $statusKemenangan = 'belum_input';
                 } elseif ($suaraReal > $maxOpponentVote) {
                     $statusKemenangan = 'menang';
@@ -93,16 +94,16 @@ class RealCountApiController extends Controller
                     'nama_tps'               => $tps->nama_tps,
                     'total_dpt'              => $tps->voters_count,
                     'target_pendukung'       => $targetPendukung,
-                    'suara_real_kandidat'    => $suaraReal,
-                    'suara_lawan_total'      => $tps->suara_lawan ?? 0,
-                    'suara_tidak_sah'        => $tps->suara_tidak_sah ?? 0,
-                    'suara_sah'              => $tps->suara_sah ?? 0,
+                    'suara_quick_kandidat'   => $suaraReal,
+                    'suara_lawan_total'      => $tps->quick_suara_lawan ?? 0,
+                    'suara_tidak_sah'        => $tps->quick_suara_tidak_sah ?? 0,
+                    'suara_sah'              => $tps->quick_suara_sah ?? 0,
                     'selisih_real_vs_target' => $selisih,
                     'pct_konversi_target'    => $pctKonversi,
                     'pct_suara_sah'          => $pctSuaraSah,
-                    'is_submitted'           => $tps->is_submitted,
-                    'waktu_input_real'       => $tps->waktu_input_real?->format('Y-m-d H:i:s'),
-                    'catatan_saksi'          => $tps->catatan_saksi,
+                    'is_submitted'           => $tps->quick_is_submitted,
+                    'waktu_input'            => $tps->quick_waktu_input?->format('Y-m-d H:i:s'),
+                    'catatan_saksi'          => $tps->quick_catatan_saksi,
                     'status_target'          => $statusTarget,
                     'status_kemenangan'      => $statusKemenangan,
                     'perolehan_per_kandidat' => $perolehanPerKandidat,
@@ -110,7 +111,7 @@ class RealCountApiController extends Controller
             });
 
         // Global summary
-        $totalSuaraKandidat  = $rekapTps->sum('suara_real_kandidat');
+        $totalSuaraKandidat  = $rekapTps->sum('suara_quick_kandidat');
         $totalSuaraLawan     = $rekapTps->sum('suara_lawan_total');
         $totalSuaraTidakSah  = $rekapTps->sum('suara_tidak_sah');
         $totalSuaraSah       = $totalSuaraKandidat + $totalSuaraLawan;
@@ -152,8 +153,8 @@ class RealCountApiController extends Controller
     }
 
     /**
-     * Real count detail for a single TPS.
-     * GET /api/realcount/{tps}
+     * Quick count detail for a single TPS.
+     * GET /api/quickcount/{tps}
      */
     public function show(Request $request, Tps $tps)
     {
@@ -170,9 +171,9 @@ class RealCountApiController extends Controller
         $tps->loadCount([
             'voters',
             'voters as supporters_count' => fn($q) => $q->where('is_supporter', true),
-        ])->load('candidateResults.candidate');
+        ])->load('quickCandidateResults.candidate');
 
-        $suaraReal       = $tps->suara_kandidat ?? 0;
+        $suaraReal       = $tps->quick_suara_kandidat ?? 0;
         $targetPendukung = $tps->supporters_count ?? 0;
         $selisih         = $suaraReal - $targetPendukung;
         $pctKonversi     = $targetPendukung > 0
@@ -182,7 +183,7 @@ class RealCountApiController extends Controller
         $perolehanPerKandidat = [];
         $maxOpponentVote = 0;
         foreach ($candidates as $cand) {
-            $res   = $tps->candidateResults->firstWhere('candidate_id', $cand->id);
+            $res   = $tps->quickCandidateResults->firstWhere('candidate_id', $cand->id);
             $votes = $res ? $res->jumlah_suara : 0;
             $perolehanPerKandidat[] = [
                 'candidate_id'      => $cand->id,
@@ -196,8 +197,8 @@ class RealCountApiController extends Controller
             }
         }
 
-        $pctSuaraSah = ($tps->suara_sah ?? 0) > 0
-            ? round(($suaraReal / $tps->suara_sah) * 100, 1)
+        $pctSuaraSah = ($tps->quick_suara_sah ?? 0) > 0
+            ? round(($suaraReal / $tps->quick_suara_sah) * 100, 1)
             : 0;
 
         return response()->json([
@@ -207,24 +208,24 @@ class RealCountApiController extends Controller
                 'nama_tps'               => $tps->nama_tps,
                 'total_dpt'              => $tps->voters_count,
                 'target_pendukung'       => $targetPendukung,
-                'suara_real_kandidat'    => $suaraReal,
-                'suara_lawan_total'      => $tps->suara_lawan ?? 0,
-                'suara_tidak_sah'        => $tps->suara_tidak_sah ?? 0,
-                'suara_sah'              => $tps->suara_sah ?? 0,
+                'suara_quick_kandidat'   => $suaraReal,
+                'suara_lawan_total'      => $tps->quick_suara_lawan ?? 0,
+                'suara_tidak_sah'        => $tps->quick_suara_tidak_sah ?? 0,
+                'suara_sah'              => $tps->quick_suara_sah ?? 0,
                 'selisih_real_vs_target' => $selisih,
                 'pct_konversi_target'    => $pctKonversi,
                 'pct_suara_sah'          => $pctSuaraSah,
-                'is_submitted'           => $tps->is_submitted,
-                'waktu_input_real'       => $tps->waktu_input_real?->format('Y-m-d H:i:s'),
-                'catatan_saksi'          => $tps->catatan_saksi,
+                'is_submitted'           => $tps->quick_is_submitted,
+                'waktu_input'            => $tps->quick_waktu_input?->format('Y-m-d H:i:s'),
+                'catatan_saksi'          => $tps->quick_catatan_saksi,
                 'perolehan_per_kandidat' => $perolehanPerKandidat,
             ],
         ]);
     }
 
     /**
-     * Submit / update real count results for a TPS.
-     * POST /api/realcount/{tps}
+     * Submit / update quick count results for a TPS.
+     * POST /api/quickcount/{tps}
      */
     public function submit(Request $request, Tps $tps)
     {
@@ -232,7 +233,7 @@ class RealCountApiController extends Controller
         if ($user && $user->isSaksi() && $user->tps_id !== $tps->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Akses ditolak. Anda hanya dapat menginput Real Count untuk TPS yang ditugaskan kepada Anda.',
+                'message' => 'Akses ditolak. Anda hanya dapat menginput Quick Count untuk TPS yang ditugaskan kepada Anda.',
             ], 403);
         }
 
@@ -256,7 +257,7 @@ class RealCountApiController extends Controller
             $suara     = (int) $jumlahSuara;
 
             if ($candidate) {
-                TpsCandidateResult::updateOrCreate(
+                TpsQuickCandidateResult::updateOrCreate(
                     ['tps_id' => $tps->id, 'candidate_id' => $candidate->id],
                     ['jumlah_suara' => $suara]
                 );
@@ -270,17 +271,17 @@ class RealCountApiController extends Controller
         }
 
         $tps->update([
-            'suara_kandidat'   => $suaraKandidatUtama,
-            'suara_lawan'      => $suaraLawanTotal,
-            'suara_tidak_sah'  => (int) ($request->suara_tidak_sah ?? 0),
-            'catatan_saksi'    => $request->catatan_saksi,
-            'is_submitted'     => true,
-            'waktu_input_real' => now(),
+            'quick_suara_kandidat'   => $suaraKandidatUtama,
+            'quick_suara_lawan'      => $suaraLawanTotal,
+            'quick_suara_tidak_sah'  => (int) ($request->suara_tidak_sah ?? 0),
+            'quick_catatan_saksi'    => $request->catatan_saksi,
+            'quick_is_submitted'     => true,
+            'quick_waktu_input'      => now(),
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => "Hasil suara real untuk {$tps->nama_tps} berhasil disimpan.",
+            'message' => "Hasil Quick Count untuk {$tps->nama_tps} berhasil disimpan.",
             'data'    => [
                 'tps_id'             => $tps->id,
                 'nama_tps'           => $tps->nama_tps,
@@ -289,14 +290,14 @@ class RealCountApiController extends Controller
                 'suara_tidak_sah'    => (int) ($request->suara_tidak_sah ?? 0),
                 'suara_sah'          => $suaraKandidatUtama + $suaraLawanTotal,
                 'is_submitted'       => true,
-                'waktu_input_real'   => now()->format('Y-m-d H:i:s'),
+                'waktu_input'        => now()->format('Y-m-d H:i:s'),
             ],
         ]);
     }
 
     /**
-     * Aggregate summary of realcount vs supporter target.
-     * GET /api/realcount/summary
+     * Aggregate summary of quick count vs supporter target.
+     * GET /api/quickcount/summary
      */
     public function summary(Request $request)
     {
@@ -304,7 +305,7 @@ class RealCountApiController extends Controller
         $candidates = Candidate::orderBy('nomor_urut')->get();
         $mainCandidate = $candidates->firstWhere('is_main_candidate', true);
 
-        $queryResult = TpsCandidateResult::selectRaw('candidate_id, SUM(jumlah_suara) as total_suara');
+        $queryResult = TpsQuickCandidateResult::selectRaw('candidate_id, SUM(jumlah_suara) as total_suara');
         if ($user && $user->isSaksi() && $user->tps_id) {
             $queryResult->where('tps_id', $user->tps_id);
         }
@@ -325,10 +326,10 @@ class RealCountApiController extends Controller
         $allTps = $tpsQuery->get();
 
         $totalTps           = $allTps->count();
-        $tpsSubmitted       = $allTps->where('is_submitted', true)->count();
+        $tpsSubmitted       = $allTps->where('quick_is_submitted', true)->count();
         $totalSupporters    = $allTps->sum('supporters_count');
-        $totalSuaraLawan    = $allTps->sum('suara_lawan');
-        $totalSuaraTidakSah = $allTps->sum('suara_tidak_sah');
+        $totalSuaraLawan    = $allTps->sum('quick_suara_lawan');
+        $totalSuaraTidakSah = $allTps->sum('quick_suara_tidak_sah');
         $totalSuaraSah      = $totalSuaraKandidat + $totalSuaraLawan;
 
         $voterQuery = Voter::query();

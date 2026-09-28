@@ -14,12 +14,20 @@ class Tps extends Model
 
     protected $fillable = [
         'nama_tps',
+        // Real Count Fields
         'suara_kandidat',
         'suara_lawan',
         'suara_tidak_sah',
         'is_submitted',
         'catatan_saksi',
         'waktu_input_real',
+        // Quick Count Fields
+        'quick_suara_kandidat',
+        'quick_suara_lawan',
+        'quick_suara_tidak_sah',
+        'quick_is_submitted',
+        'quick_catatan_saksi',
+        'quick_waktu_input',
     ];
 
     protected $casts = [
@@ -28,7 +36,20 @@ class Tps extends Model
         'suara_tidak_sah' => 'integer',
         'is_submitted' => 'boolean',
         'waktu_input_real' => 'datetime',
+        'quick_suara_kandidat' => 'integer',
+        'quick_suara_lawan' => 'integer',
+        'quick_suara_tidak_sah' => 'integer',
+        'quick_is_submitted' => 'boolean',
+        'quick_waktu_input' => 'datetime',
     ];
+
+    /**
+     * User/Saksi yang ditugaskan di TPS ini.
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class, 'tps_id');
+    }
 
     /**
      * Semua pemilih yang terdaftar di TPS ini.
@@ -47,7 +68,7 @@ class Tps extends Model
     }
 
     /**
-     * Perolehan suara per kandidat di TPS ini.
+     * Perolehan suara Real Count per kandidat di TPS ini.
      */
     public function candidateResults(): HasMany
     {
@@ -55,7 +76,15 @@ class Tps extends Model
     }
 
     /**
-     * Total Suara Sah = Suara Kandidat Utama + Suara Lawan
+     * Perolehan suara Quick Count per kandidat di TPS ini.
+     */
+    public function quickCandidateResults(): HasMany
+    {
+        return $this->hasMany(TpsQuickCandidateResult::class, 'tps_id');
+    }
+
+    /**
+     * Total Suara Sah Real = Suara Kandidat Utama + Suara Lawan
      */
     public function getSuaraSahAttribute(): int
     {
@@ -63,7 +92,7 @@ class Tps extends Model
     }
 
     /**
-     * Total Suara Masuk = Suara Sah + Suara Tidak Sah
+     * Total Suara Masuk Real = Suara Sah + Suara Tidak Sah
      */
     public function getTotalSuaraMasukAttribute(): int
     {
@@ -79,5 +108,32 @@ class Tps extends Model
             return 0.0;
         }
         return round(($this->suara_kandidat / $this->suara_sah) * 100, 1);
+    }
+
+    /**
+     * Total Suara Sah Quick Count
+     */
+    public function getQuickSuaraSahAttribute(): int
+    {
+        return ($this->quick_suara_kandidat ?? 0) + ($this->quick_suara_lawan ?? 0);
+    }
+
+    /**
+     * Total Suara Masuk Quick Count
+     */
+    public function getQuickTotalSuaraMasukAttribute(): int
+    {
+        return $this->quick_suara_sah + ($this->quick_suara_tidak_sah ?? 0);
+    }
+
+    /**
+     * Persentase Suara Quick Count Kandidat dari Total Suara Sah Quick Count
+     */
+    public function getQuickPersentaseKemenanganAttribute(): float
+    {
+        if ($this->quick_suara_sah <= 0) {
+            return 0.0;
+        }
+        return round(($this->quick_suara_kandidat / $this->quick_suara_sah) * 100, 1);
     }
 }

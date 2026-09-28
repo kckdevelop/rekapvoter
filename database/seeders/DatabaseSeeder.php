@@ -13,23 +13,58 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Admin User
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' => 'admin@example.com'],
             [
-                'name'     => 'Administrator',
+                'name'     => 'Administrator Pusat',
                 'password' => Hash::make('password'),
+                'role'     => 'admin',
+                'tps_id'   => null,
+                'phone'    => '081234567890',
             ]
         );
 
-        // 2. Sample TPS
+        // 2. Candidates
+        \App\Models\Candidate::firstOrCreate(
+            ['nomor_urut' => 1],
+            [
+                'nama' => 'Nurma Setiawan, SE',
+                'is_main_candidate' => true,
+                'warna_badge' => '#059669',
+            ]
+        );
+        \App\Models\Candidate::firstOrCreate(
+            ['nomor_urut' => 2],
+            [
+                'nama' => 'Drs. H. Subagyo, M.Si',
+                'is_main_candidate' => false,
+                'warna_badge' => '#2563eb',
+            ]
+        );
+
+        // 3. Sample TPS
         $tpsNames = ['TPS 01', 'TPS 02', 'TPS 03', 'TPS 04'];
         $tpsModels = [];
 
-        foreach ($tpsNames as $nama) {
-            $tpsModels[$nama] = Tps::firstOrCreate(['nama_tps' => $nama]);
+        foreach ($tpsNames as $index => $nama) {
+            $tps = Tps::firstOrCreate(['nama_tps' => $nama]);
+            $tpsModels[$nama] = $tps;
+
+            // Buat Akun Saksi per TPS
+            $saksiNumber = sprintf('%02d', $index + 1);
+            User::updateOrCreate(
+                ['email' => "saksi{$saksiNumber}@example.com"],
+                [
+                    'name'     => "Saksi {$nama}",
+                    'password' => Hash::make('password'),
+                    'role'     => 'saksi',
+                    'tps_id'   => $tps->id,
+                    'phone'    => "0812345678{$saksiNumber}",
+                ]
+            );
         }
 
-        // 3. Sample Voters
+        // 4. Sample Voters
         $sampleVoters = [
             // TPS 01
             ['nama' => 'Budi Santoso', 'tps' => 'TPS 01', 'is_supporter' => true],

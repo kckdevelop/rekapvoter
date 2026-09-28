@@ -11,20 +11,29 @@ class TpsApiController extends Controller
     /**
      * List all TPS with voter & supporter counts.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tpsList = Tps::withCount([
+        $user = $request->user();
+        $query = Tps::withCount([
             'voters',
             'voters as supporters_count' => fn($q) => $q->where('is_supporter', true),
-        ])->orderBy('nama_tps')->get()->map(function ($tps) {
+        ]);
+
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $query->where('id', $user->tps_id);
+        }
+
+        $tpsList = $query->orderBy('nama_tps')->get()->map(function ($tps) {
             $pct = $tps->voters_count > 0 ? round(($tps->supporters_count / $tps->voters_count) * 100, 1) : 0;
             return [
-                'id'               => $tps->id,
-                'nama_tps'         => $tps->nama_tps,
-                'total_voters'     => $tps->voters_count,
-                'total_supporters' => $tps->supporters_count,
-                'percentage'       => $pct,
-                'created_at'       => $tps->created_at->format('Y-m-d H:i:s'),
+                'id'                 => $tps->id,
+                'nama_tps'           => $tps->nama_tps,
+                'total_voters'       => $tps->voters_count,
+                'total_supporters'   => $tps->supporters_count,
+                'percentage'         => $pct,
+                'quick_is_submitted' => $tps->quick_is_submitted,
+                'real_is_submitted'  => $tps->is_submitted,
+                'created_at'         => $tps->created_at?->format('Y-m-d H:i:s'),
             ];
         });
 
@@ -35,10 +44,18 @@ class TpsApiController extends Controller
     }
 
     /**
-     * Store new TPS via mobile API.
+     * Store new TPS via mobile API (Admin only).
      */
     public function store(Request $request)
     {
+        $user = $request->user();
+        if ($user && !$user->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya Administrator yang dapat menambahkan TPS baru.',
+            ], 403);
+        }
+
         $request->validate([
             'nama_tps' => 'required|string|max:100|unique:tps,nama_tps',
         ], [
@@ -55,3 +72,4 @@ class TpsApiController extends Controller
         ], 201);
     }
 }
+

@@ -3,8 +3,10 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CandidateApiController;
 use App\Http\Controllers\Api\DashboardApiController;
+use App\Http\Controllers\Api\QuickCountApiController;
 use App\Http\Controllers\Api\RealCountApiController;
 use App\Http\Controllers\Api\TpsApiController;
+use App\Http\Controllers\Api\UserApiController;
 use App\Http\Controllers\Api\VoterApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,11 +30,24 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     // ── Auth & Profile ──────────────────────────────────────────────────────
-    Route::get('/me',      [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me',               [AuthController::class, 'me']);
+    Route::post('/logout',          [AuthController::class, 'logout']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // ── Dashboard Mobile ────────────────────────────────────────────────────
     Route::get('/dashboard', [DashboardApiController::class, 'index']);
+
+    // ── Quick Count (Fitur Hitung Cepat TPS) ──────────────────────────────────
+    Route::get('/quickcount',          [QuickCountApiController::class, 'index']);
+    Route::get('/quickcount/summary',  [QuickCountApiController::class, 'summary']);
+    Route::get('/quickcount/{tps}',    [QuickCountApiController::class, 'show']);
+    Route::post('/quickcount/{tps}',   [QuickCountApiController::class, 'submit']);
+
+    // ── Real Count (Fitur Hitung Real C1 TPS) ────────────────────────────────
+    Route::get('/realcount',          [RealCountApiController::class, 'index']);
+    Route::get('/realcount/summary',  [RealCountApiController::class, 'summary']);
+    Route::get('/realcount/{tps}',    [RealCountApiController::class, 'show']);
+    Route::post('/realcount/{tps}',   [RealCountApiController::class, 'submit']);
 
     // ── TPS ─────────────────────────────────────────────────────────────────
     Route::get('/tps',       [TpsApiController::class, 'index']);
@@ -45,13 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/candidates/{candidate}', [CandidateApiController::class, 'update']);
     Route::delete('/candidates/{candidate}', [CandidateApiController::class, 'destroy']);
 
-    // ── Real Count ──────────────────────────────────────────────────────────
-    Route::get('/realcount',          [RealCountApiController::class, 'index']);
-    Route::get('/realcount/summary',  [RealCountApiController::class, 'summary']);
-    Route::get('/realcount/{tps}',    [RealCountApiController::class, 'show']);
-    Route::post('/realcount/{tps}',   [RealCountApiController::class, 'submit']);
-
-    // ── Voters ──────────────────────────────────────────────────────────────
+    // ── Voters (Data Pemilih DPT TPS) ────────────────────────────────────────
     Route::get('/voters',                      [VoterApiController::class, 'index']);
     Route::post('/voters',                     [VoterApiController::class, 'store']);
     Route::post('/voters/bulk-supporter',      [VoterApiController::class, 'bulkSupporter']);
@@ -66,4 +75,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Supporters & Reports ─────────────────────────────────────────────────
     Route::get('/supporters', [VoterApiController::class, 'supporters']);
     Route::get('/laporan',    [VoterApiController::class, 'laporan']);
+
+    // ── User / Akun Saksi TPS Management (Admin only) ────────────────────────
+    Route::middleware('admin')->group(function () {
+        Route::get('/users',          [UserApiController::class, 'index']);
+        Route::post('/users',         [UserApiController::class, 'store']);
+        Route::get('/users/{user}',   [UserApiController::class, 'show']);
+        Route::put('/users/{user}',   [UserApiController::class, 'update']);
+        Route::delete('/users/{user}', [UserApiController::class, 'destroy']);
+    });
 });

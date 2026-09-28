@@ -26,4 +26,9 @@ class Candidate extends Model
     {
         return $this->hasMany(TpsCandidateResult::class, 'candidate_id');
     }
+
+    public function quickResults(): HasMany
+    {
+        return $this->hasMany(TpsQuickCandidateResult::class, 'candidate_id');
+    }
 }

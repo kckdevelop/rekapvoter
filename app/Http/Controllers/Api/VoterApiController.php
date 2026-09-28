@@ -14,8 +14,14 @@ class VoterApiController extends Controller
      */
     public function index(Request $request)
     {
+        $user = $request->user();
         $selectedTps = $request->query('tps_id');
         $search      = $request->query('search');
+
+        // Jika user adalah saksi, paksa filter hanya TPS miliknya
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $selectedTps = $user->tps_id;
+        }
 
         $voters = Voter::with('tps')
             ->when($selectedTps, fn($q) => $q->where('tps_id', $selectedTps))
@@ -33,8 +39,16 @@ class VoterApiController extends Controller
     /**
      * Get detail of a single voter.
      */
-    public function show(Voter $voter)
+    public function show(Request $request, Voter $voter)
     {
+        $user = $request->user();
+        if ($user && $user->isSaksi() && $user->tps_id !== $voter->tps_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Pemilih ini bukan berada di TPS Anda.',
+            ], 403);
+        }
+
         return response()->json([
             'success' => true,
             'data'    => $voter->load('tps'),
@@ -46,6 +60,13 @@ class VoterApiController extends Controller
      */
     public function store(Request $request)
     {
+        $user = $request->user();
+
+        // Jika saksi, kunci tps_id ke TPS saksi
+        $targetTpsId = ($user && $user->isSaksi() && $user->tps_id) ? $user->tps_id : $request->tps_id;
+
+        $request->merge(['tps_id' => $targetTpsId]);
+
         $request->validate([
             'tps_id'       => 'required|exists:tps,id',
             'nama'         => 'required|string|max:255',
@@ -57,7 +78,7 @@ class VoterApiController extends Controller
         ]);
 
         $voter = Voter::create([
-            'tps_id'       => $request->tps_id,
+            'tps_id'       => $targetTpsId,
             'nama'         => $request->nama,
             'is_supporter' => $request->has('is_supporter') ? (bool) $request->is_supporter : false,
         ]);
@@ -74,6 +95,14 @@ class VoterApiController extends Controller
      */
     public function update(Request $request, Voter $voter)
     {
+        $user = $request->user();
+        if ($user && $user->isSaksi() && $user->tps_id !== $voter->tps_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Pemilih ini bukan berada di TPS Anda.',
+            ], 403);
+        }
+
         $request->validate([
             'tps_id'       => 'sometimes|required|exists:tps,id',
             'nama'         => 'sometimes|required|string|max:255',
@@ -84,7 +113,11 @@ class VoterApiController extends Controller
             'nama.required'   => 'Nama pemilih wajib diisi.',
         ]);
 
-        $voter->fill($request->only(['tps_id', 'nama']));
+        if ($user && $user->isSaksi()) {
+            $voter->nama = $request->input('nama', $voter->nama);
+        } else {
+            $voter->fill($request->only(['tps_id', 'nama']));
+        }
 
         if ($request->has('is_supporter')) {
             $voter->is_supporter = (bool) $request->is_supporter;
@@ -102,8 +135,16 @@ class VoterApiController extends Controller
     /**
      * Delete a single voter via API.
      */
-    public function destroy(Voter $voter)
+    public function destroy(Request $request, Voter $voter)
     {
+        $user = $request->user();
+        if ($user && $user->isSaksi() && $user->tps_id !== $voter->tps_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Pemilih ini bukan berada di TPS Anda.',
+            ], 403);
+        }
+
         $voter->delete();
 
         return response()->json([
@@ -115,8 +156,16 @@ class VoterApiController extends Controller
     /**
      * Toggle voter status (is_supporter) via API.
      */
-    public function toggleSupporter(Voter $voter)
+    public function toggleSupporter(Request $request, Voter $voter)
     {
+        $user = $request->user();
+        if ($user && $user->isSaksi() && $user->tps_id !== $voter->tps_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Pemilih ini bukan berada di TPS Anda.',
+            ], 403);
+        }
+
         $voter->update(['is_supporter' => ! $voter->is_supporter]);
 
         return response()->json([
@@ -134,18 +183,20 @@ class VoterApiController extends Controller
      */
     public function bulkSupporter(Request $request)
     {
+        $user = $request->user();
         $request->validate([
             'voter_ids'    => 'required|array',
             'voter_ids.*'  => 'exists:voters,id',
             'is_supporter' => 'required|boolean',
         ]);
 
-        $voterIds    = $request->voter_ids;
+        $query = Voter::whereIn('id', $request->voter_ids);
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $query->where('tps_id', $user->tps_id);
+        }
+
         $isSupporter = (bool) $request->is_supporter;
-
-        Voter::whereIn('id', $voterIds)->update(['is_supporter' => $isSupporter]);
-
-        $count = count($voterIds);
+        $count = $query->update(['is_supporter' => $isSupporter]);
         $statusText = $isSupporter ? 'Pendukung' : 'Pemilih Biasa';
 
         return response()->json([
@@ -161,6 +212,7 @@ class VoterApiController extends Controller
      */
     public function bulkDelete(Request $request)
     {
+        $user = $request->user();
         $request->validate([
             'voter_ids'   => 'required|array',
             'voter_ids.*' => 'exists:voters,id',
@@ -169,10 +221,12 @@ class VoterApiController extends Controller
             'voter_ids.*.exists' => 'Salah satu pemilih tidak ditemukan.',
         ]);
 
-        $voterIds = $request->voter_ids;
-        $count    = count($voterIds);
+        $query = Voter::whereIn('id', $request->voter_ids);
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $query->where('tps_id', $user->tps_id);
+        }
 
-        Voter::whereIn('id', $voterIds)->delete();
+        $count = $query->delete();
 
         return response()->json([
             'success'       => true,
@@ -186,8 +240,13 @@ class VoterApiController extends Controller
      */
     public function supporters(Request $request)
     {
+        $user = $request->user();
         $selectedTps = $request->query('tps_id');
         $search      = $request->query('search');
+
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $selectedTps = $user->tps_id;
+        }
 
         $supporters = Voter::with('tps')
             ->where('is_supporter', true)
@@ -197,9 +256,14 @@ class VoterApiController extends Controller
             ->orderBy('nama')
             ->paginate(30);
 
+        $totalSupportersQuery = Voter::where('is_supporter', true);
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $totalSupportersQuery->where('tps_id', $user->tps_id);
+        }
+
         return response()->json([
             'success'          => true,
-            'total_supporters' => Voter::where('is_supporter', true)->count(),
+            'total_supporters' => $totalSupportersQuery->count(),
             'data'             => $supporters,
         ]);
     }
@@ -207,13 +271,20 @@ class VoterApiController extends Controller
     /**
      * Laporan / Rekapitulasi per TPS endpoint.
      */
-    public function laporan()
+    public function laporan(Request $request)
     {
-        $rekap = Tps::withCount([
+        $user = $request->user();
+        $tpsQuery = Tps::withCount([
             'voters',
             'voters as supporters_count' => fn($q) => $q->where('is_supporter', true),
             'voters as non_supporters_count' => fn($q) => $q->where('is_supporter', false),
-        ])->orderBy('nama_tps')->get()->map(function ($tps) {
+        ]);
+
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $tpsQuery->where('id', $user->tps_id);
+        }
+
+        $rekap = $tpsQuery->orderBy('nama_tps')->get()->map(function ($tps) {
             $pct = $tps->voters_count > 0 ? round(($tps->supporters_count / $tps->voters_count) * 100, 1) : 0;
             return [
                 'id'                   => $tps->id,
@@ -226,14 +297,24 @@ class VoterApiController extends Controller
             ];
         });
 
-        $totalVoters     = Voter::count();
-        $totalSupporters = Voter::where('is_supporter', true)->count();
+        $voterQuery = Voter::query();
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $voterQuery->where('tps_id', $user->tps_id);
+        }
+        $totalVoters = $voterQuery->count();
+
+        $suppQuery = Voter::where('is_supporter', true);
+        if ($user && $user->isSaksi() && $user->tps_id) {
+            $suppQuery->where('tps_id', $user->tps_id);
+        }
+        $totalSupporters = $suppQuery->count();
+
         $overallPercentage = $totalVoters > 0 ? round(($totalSupporters / $totalVoters) * 100, 1) : 0;
 
         return response()->json([
             'success' => true,
             'summary' => [
-                'total_tps'          => Tps::count(),
+                'total_tps'          => $rekap->count(),
                 'total_voters'       => $totalVoters,
                 'total_supporters'   => $totalSupporters,
                 'overall_percentage' => $overallPercentage,

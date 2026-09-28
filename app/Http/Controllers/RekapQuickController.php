@@ -4,18 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Candidate;
 use App\Models\Tps;
-use App\Models\TpsCandidateResult;
+use App\Models\TpsQuickCandidateResult;
+use Illuminate\Http\Request;
 
-class RekapRealController extends Controller
+class RekapQuickController extends Controller
 {
     /**
-     * Halaman Rekapitulasi Perbandingan Hasil Real vs Data Pendukung per TPS
+     * Halaman Rekapitulasi Perbandingan Hasil Quick Count vs Data Pendukung per TPS
      */
     public function index(Request $request)
     {
         $user = $request->user();
 
-        // Auto-seed kandidat utama & lawan jika belum ada
+        // Auto-seed kandidat jika belum ada
         if (Candidate::count() === 0) {
             Candidate::create(['nomor_urut' => 1, 'nama' => 'Nurma Setiawan, SE', 'is_main_candidate' => true, 'warna_badge' => '#059669']);
             Candidate::create(['nomor_urut' => 2, 'nama' => 'Drs. H. Subagyo, M.Si', 'is_main_candidate' => false, 'warna_badge' => '#2563eb']);
@@ -24,7 +25,7 @@ class RekapRealController extends Controller
         $candidates = Candidate::orderBy('nomor_urut')->get();
 
         $query = Tps::with([
-            'candidateResults.candidate'
+            'quickCandidateResults.candidate'
         ])->withCount([
             'voters',
             'voters as supporters_count' => fn($q) => $q->where('is_supporter', true),
@@ -36,28 +37,28 @@ class RekapRealController extends Controller
 
         $rekapTps = $query->orderBy('nama_tps')->get();
 
-        // Total Suara Real per Kandidat secara Individual
-        $candidateTotals = TpsCandidateResult::selectRaw('candidate_id, SUM(jumlah_suara) as total_suara')
+        // Total Suara Quick per Kandidat secara Individual
+        $candidateTotals = TpsQuickCandidateResult::selectRaw('candidate_id, SUM(jumlah_suara) as total_suara')
             ->groupBy('candidate_id')
             ->pluck('total_suara', 'candidate_id');
 
         $totalTps            = $rekapTps->count();
-        $tpsSubmittedCount   = $rekapTps->where('is_submitted', true)->count();
+        $tpsSubmittedCount   = $rekapTps->where('quick_is_submitted', true)->count();
         $totalDpt            = $rekapTps->sum('voters_count');
         $totalSupporters     = $rekapTps->sum('supporters_count');
-        $totalSuaraKandidat  = $rekapTps->sum('suara_kandidat');
-        $totalSuaraLawan     = $rekapTps->sum('suara_lawan');
-        $totalSuaraTidakSah  = $rekapTps->sum('suara_tidak_sah');
+        $totalSuaraKandidat  = $rekapTps->sum('quick_suara_kandidat');
+        $totalSuaraLawan     = $rekapTps->sum('quick_suara_lawan');
+        $totalSuaraTidakSah  = $rekapTps->sum('quick_suara_tidak_sah');
         $totalSuaraSah       = $totalSuaraKandidat + $totalSuaraLawan;
         $totalSuaraMasuk     = $totalSuaraSah + $totalSuaraTidakSah;
 
-        // Persentase Suara Real vs Sah
+        // Persentase Suara Quick vs Sah
         $persentaseSuaraKandidat = $totalSuaraSah > 0 ? round(($totalSuaraKandidat / $totalSuaraSah) * 100, 1) : 0;
         
-        // Persentase Konversi Pendukung ke Suara Real (Suara Real / Total Pendukung * 100%)
+        // Persentase Konversi Pendukung ke Suara Quick (Suara Quick / Total Pendukung * 100%)
         $persentaseKonversi = $totalSupporters > 0 ? round(($totalSuaraKandidat / $totalSupporters) * 100, 1) : ($totalSuaraKandidat > 0 ? 100 : 0);
 
-        // Total Selisih (Suara Real Kandidat - Target Pendukung)
+        // Total Selisih (Suara Quick Kandidat - Target Pendukung)
         $selisihKandidatVsPendukung = $totalSuaraKandidat - $totalSupporters;
 
         // Status Keberhasilan Overall
@@ -78,7 +79,7 @@ class RekapRealController extends Controller
             $badgeColorOverall = 'rose';
         }
 
-        return view('rekapreal.index', compact(
+        return view('rekapquick.index', compact(
             'candidates',
             'candidateTotals',
             'rekapTps',
@@ -101,7 +102,7 @@ class RekapRealController extends Controller
     }
 
     /**
-     * Cetak Laporan Rekapitulasi Real Count vs Pendukung
+     * Cetak Laporan Rekapitulasi Quick Count vs Pendukung
      */
     public function print(Request $request)
     {
@@ -109,7 +110,7 @@ class RekapRealController extends Controller
         $candidates = Candidate::orderBy('nomor_urut')->get();
 
         $query = Tps::with([
-            'candidateResults.candidate'
+            'quickCandidateResults.candidate'
         ])->withCount([
             'voters',
             'voters as supporters_count' => fn($q) => $q->where('is_supporter', true),
@@ -123,14 +124,14 @@ class RekapRealController extends Controller
 
         $totalDpt            = $rekapTps->sum('voters_count');
         $totalSupporters     = $rekapTps->sum('supporters_count');
-        $totalSuaraKandidat  = $rekapTps->sum('suara_kandidat');
-        $totalSuaraLawan     = $rekapTps->sum('suara_lawan');
-        $totalSuaraTidakSah  = $rekapTps->sum('suara_tidak_sah');
+        $totalSuaraKandidat  = $rekapTps->sum('quick_suara_kandidat');
+        $totalSuaraLawan     = $rekapTps->sum('quick_suara_lawan');
+        $totalSuaraTidakSah  = $rekapTps->sum('quick_suara_tidak_sah');
         $totalSuaraSah       = $totalSuaraKandidat + $totalSuaraLawan;
         $persentaseKemenangan = $totalSuaraSah > 0 ? round(($totalSuaraKandidat / $totalSuaraSah) * 100, 1) : 0;
         $persentaseKonversi   = $totalSupporters > 0 ? round(($totalSuaraKandidat / $totalSupporters) * 100, 1) : 0;
 
-        return view('rekapreal.print', compact(
+        return view('rekapquick.print', compact(
             'candidates',
             'rekapTps',
             'totalDpt',
@@ -140,8 +141,7 @@ class RekapRealController extends Controller
             'totalSuaraTidakSah',
             'totalSuaraSah',
             'persentaseKemenangan',
-            'persentaseKonversi',
-            'user'
+            'persentaseKonversi'
         ));
     }
 }

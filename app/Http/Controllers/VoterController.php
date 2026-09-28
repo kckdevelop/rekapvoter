@@ -13,10 +13,17 @@ class VoterController extends Controller
 {
     public function index(Request $request)
     {
-        $tpsList          = Tps::orderBy('nama_tps')->get();
+        $user = $request->user();
         $selectedTps      = $request->query('tps_id');
         $search           = $request->query('search');
-        $statusSupporter = $request->query('status_supporter');
+        $statusSupporter  = $request->query('status_supporter');
+
+        if ($user->isSaksi() && $user->tps_id) {
+            $tpsList     = Tps::where('id', $user->tps_id)->get();
+            $selectedTps = $user->tps_id;
+        } else {
+            $tpsList     = Tps::orderBy('nama_tps')->get();
+        }
 
         $voters = Voter::with('tps')
             ->when($selectedTps, fn($q) => $q->where('tps_id', $selectedTps))
@@ -29,17 +36,27 @@ class VoterController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('voters.index', compact('voters', 'tpsList', 'selectedTps', 'search', 'statusSupporter'));
+        return view('voters.index', compact('voters', 'tpsList', 'selectedTps', 'search', 'statusSupporter', 'user'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $tpsList = Tps::orderBy('nama_tps')->get();
-        return view('voters.create', compact('tpsList'));
+        $user = $request->user();
+        if ($user->isSaksi() && $user->tps_id) {
+            $tpsList = Tps::where('id', $user->tps_id)->get();
+        } else {
+            $tpsList = Tps::orderBy('nama_tps')->get();
+        }
+        return view('voters.create', compact('tpsList', 'user'));
     }
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        $targetTpsId = ($user->isSaksi() && $user->tps_id) ? $user->tps_id : $request->tps_id;
+
+        $request->merge(['tps_id' => $targetTpsId]);
+
         $request->validate([
             'tps_id'       => 'required|exists:tps,id',
             'nama'         => 'required|string|max:255',
@@ -51,7 +68,7 @@ class VoterController extends Controller
         ]);
 
         Voter::create([
-            'tps_id'       => $request->tps_id,
+            'tps_id'       => $targetTpsId,
             'nama'         => $request->nama,
             'is_supporter' => $request->has('is_supporter') ? (bool) $request->is_supporter : false,
         ]);
@@ -60,14 +77,31 @@ class VoterController extends Controller
             ->with('success', 'Pemilih berhasil ditambahkan.');
     }
 
-    public function edit(Voter $voter)
+    public function edit(Request $request, Voter $voter)
     {
-        $tpsList = Tps::orderBy('nama_tps')->get();
-        return view('voters.edit', compact('voter', 'tpsList'));
+        $user = $request->user();
+        if ($user->isSaksi() && $user->tps_id !== $voter->tps_id) {
+            return redirect()->route('voters.index')->with('error', 'Akses ditolak. Pemilih ini bukan berada di TPS Anda.');
+        }
+
+        if ($user->isSaksi() && $user->tps_id) {
+            $tpsList = Tps::where('id', $user->tps_id)->get();
+        } else {
+            $tpsList = Tps::orderBy('nama_tps')->get();
+        }
+        return view('voters.edit', compact('voter', 'tpsList', 'user'));
     }
 
     public function update(Request $request, Voter $voter)
     {
+        $user = $request->user();
+        if ($user->isSaksi() && $user->tps_id !== $voter->tps_id) {
+            return redirect()->route('voters.index')->with('error', 'Akses ditolak. Pemilih ini bukan berada di TPS Anda.');
+        }
+
+        $targetTpsId = ($user->isSaksi() && $user->tps_id) ? $user->tps_id : $request->tps_id;
+        $request->merge(['tps_id' => $targetTpsId]);
+
         $request->validate([
             'tps_id'       => 'required|exists:tps,id',
             'nama'         => 'required|string|max:255',
@@ -79,7 +113,7 @@ class VoterController extends Controller
         ]);
 
         $voter->update([
-            'tps_id'       => $request->tps_id,
+            'tps_id'       => $targetTpsId,
             'nama'         => $request->nama,
             'is_supporter' => $request->has('is_supporter') ? (bool) $request->is_supporter : false,
         ]);
@@ -88,8 +122,13 @@ class VoterController extends Controller
             ->with('success', 'Data pemilih berhasil diperbarui.');
     }
 
-    public function destroy(Voter $voter)
+    public function destroy(Request $request, Voter $voter)
     {
+        $user = $request->user();
+        if ($user->isSaksi() && $user->tps_id !== $voter->tps_id) {
+            return redirect()->route('voters.index')->with('error', 'Akses ditolak. Pemilih ini bukan berada di TPS Anda.');
+        }
+
         $voter->delete();
         return redirect()->route('voters.index')
             ->with('success', 'Data pemilih berhasil dihapus.');
@@ -97,6 +136,10 @@ class VoterController extends Controller
 
     public function import(Request $request)
     {
+        $user = $request->user();
+        $targetTpsId = ($user->isSaksi() && $user->tps_id) ? $user->tps_id : $request->tps_id;
+        $request->merge(['tps_id' => $targetTpsId]);
+
         $request->validate([
             'tps_id' => 'required|exists:tps,id',
             'file'   => 'required|mimes:xlsx,xls,csv|max:5120',
@@ -108,13 +151,13 @@ class VoterController extends Controller
             'file.max'        => 'Ukuran file maksimal 5MB.',
         ]);
 
-        $import = new VotersImport((int) $request->tps_id);
+        $import = new VotersImport((int) $targetTpsId);
         Excel::import($import, $request->file('file'));
 
-        $tps   = Tps::find($request->tps_id);
+        $tps   = Tps::find($targetTpsId);
         $count = $import->getImportedCount();
 
-        return redirect()->route('voters.index', ['tps_id' => $request->tps_id])
+        return redirect()->route('voters.index', ['tps_id' => $targetTpsId])
             ->with('success', "Berhasil mengimport {$count} data pemilih ke {$tps->nama_tps}.");
     }
 
@@ -126,8 +169,13 @@ class VoterController extends Controller
         return Excel::download(new VotersTemplateExport(), 'template_import_pemilih.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
-    public function toggleSupporter(Voter $voter)
+    public function toggleSupporter(Request $request, Voter $voter)
     {
+        $user = $request->user();
+        if ($user->isSaksi() && $user->tps_id !== $voter->tps_id) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+        }
+
         $voter->update(['is_supporter' => ! $voter->is_supporter]);
 
         return response()->json([
@@ -141,43 +189,48 @@ class VoterController extends Controller
 
     public function bulkSupporter(Request $request)
     {
+        $user = $request->user();
         $request->validate([
             'voter_ids'    => 'required|array',
             'voter_ids.*'  => 'exists:voters,id',
             'is_supporter' => 'required|boolean',
         ]);
 
-        $voterIds    = $request->voter_ids;
+        $query = Voter::whereIn('id', $request->voter_ids);
+        if ($user->isSaksi() && $user->tps_id) {
+            $query->where('tps_id', $user->tps_id);
+        }
+
         $isSupporter = (bool) $request->is_supporter;
-
-        Voter::whereIn('id', $voterIds)->update(['is_supporter' => $isSupporter]);
-
-        $count = count($voterIds);
+        $count = $query->update(['is_supporter' => $isSupporter]);
         $statusText = $isSupporter ? 'Pendukung' : 'Pemilih Biasa';
 
         return response()->json([
             'success'      => true,
             'is_supporter' => $isSupporter,
-            'voter_ids'    => $voterIds,
+            'voter_ids'    => $request->voter_ids,
             'message'      => "Berhasil memperbarui {$count} pemilih menjadi {$statusText}.",
         ]);
     }
 
     public function bulkDelete(Request $request)
     {
+        $user = $request->user();
         $request->validate([
             'voter_ids'   => 'required|array',
             'voter_ids.*' => 'exists:voters,id',
         ]);
 
-        $voterIds = $request->voter_ids;
-        $count    = count($voterIds);
+        $query = Voter::whereIn('id', $request->voter_ids);
+        if ($user->isSaksi() && $user->tps_id) {
+            $query->where('tps_id', $user->tps_id);
+        }
 
-        Voter::whereIn('id', $voterIds)->delete();
+        $count = $query->delete();
 
         return response()->json([
             'success'   => true,
-            'voter_ids' => $voterIds,
+            'voter_ids' => $request->voter_ids,
             'message'   => "Berhasil menghapus {$count} data pemilih.",
         ]);
     }

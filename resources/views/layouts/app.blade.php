@@ -100,7 +100,8 @@
                         <span>Dashboard</span>
                     </a>
 
-                    {{-- Manajemen TPS --}}
+                    @if(Auth::user()->isAdmin())
+                    {{-- Manajemen TPS (Khusus Admin) --}}
                     @php $active = request()->routeIs('tps.*'); @endphp
                     <a href="{{ route('tps.index') }}"
                        class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $active ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-900/40' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
@@ -109,6 +110,7 @@
                         </div>
                         <span>Manajemen TPS</span>
                     </a>
+                    @endif
 
                     {{-- Data Pemilih --}}
                     @php $active = request()->routeIs('voters.*'); @endphp
@@ -117,7 +119,7 @@
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $active ? 'bg-white/20 text-white' : 'bg-slate-800 text-indigo-400' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         </div>
-                        <span>Data Pemilih</span>
+                        <span>{{ Auth::user()->isSaksi() ? 'Data Pemilih TPS' : 'Data Pemilih (DPT)' }}</span>
                     </a>
 
                     {{-- Khusus Pendukung --}}
@@ -143,9 +145,37 @@
                 </div>
             </div>
 
+            {{-- Quick Count Section --}}
+            <div>
+                <p class="text-amber-400 text-[11px] font-extrabold uppercase tracking-widest px-3 mb-3">Quick Count (Hitung Cepat)</p>
+                <div class="space-y-1.5">
+
+                    {{-- Input Quick Count TPS --}}
+                    @php $active = request()->routeIs('quickcount.*'); @endphp
+                    <a href="{{ route('quickcount.index') }}"
+                       class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $active ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-900/40' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $active ? 'bg-white/20 text-white' : 'bg-slate-800 text-amber-400' }}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <span>{{ Auth::user()->isSaksi() ? 'Input Quick Count TPS' : 'Input Quick Count' }}</span>
+                    </a>
+
+                    {{-- Rekap Quick vs Pendukung --}}
+                    @php $active = request()->routeIs('rekap-quick.*'); @endphp
+                    <a href="{{ route('rekap-quick.index') }}"
+                       class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $active ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-900/40' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $active ? 'bg-white/20 text-white' : 'bg-slate-800 text-yellow-400' }}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <span class="flex-1">Rekap Quick vs Target</span>
+                    </a>
+
+                </div>
+            </div>
+
             {{-- Real Count Section --}}
             <div>
-                <p class="text-rose-400 text-[11px] font-extrabold uppercase tracking-widest px-3 mb-3">Real Count & Pemilihan</p>
+                <p class="text-rose-400 text-[11px] font-extrabold uppercase tracking-widest px-3 mb-3">Real Count (Hitung Resmi)</p>
                 <div class="space-y-1.5">
 
                     {{-- Input Hasil Real TPS --}}
@@ -155,17 +185,17 @@
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $active ? 'bg-white/20 text-white' : 'bg-slate-800 text-rose-400' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                         </div>
-                        <span>Input Hasil Real TPS</span>
+                        <span>{{ Auth::user()->isSaksi() ? 'Input Real Count TPS' : 'Input Hasil Real TPS' }}</span>
                     </a>
 
                     {{-- Rekap Real vs Pendukung --}}
                     @php $active = request()->routeIs('rekap-real.*'); @endphp
                     <a href="{{ route('rekap-real.index') }}"
-                       class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $active ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-900/40' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $active ? 'bg-white/20 text-white' : 'bg-slate-800 text-amber-400' }}">
+                       class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $active ? 'bg-gradient-to-r from-rose-600 to-rose-700 text-white shadow-lg shadow-rose-900/40' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $active ? 'bg-white/20 text-white' : 'bg-slate-800 text-rose-400' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         </div>
-                        <span class="flex-1">Rekap Real vs Pendukung</span>
+                        <span class="flex-1">Rekap Real vs Target</span>
                     </a>
 
                 </div>
@@ -176,14 +206,27 @@
                 <p class="text-slate-500 text-[11px] font-extrabold uppercase tracking-widest px-3 mb-3">Pengaturan</p>
                 <div class="space-y-1.5">
 
+                    @if(Auth::user()->isAdmin())
+                    {{-- Kelola Akun / User Saksi TPS (Khusus Admin) --}}
+                    @php $active = request()->routeIs('users.*'); @endphp
+                    <a href="{{ route('users.index') }}"
+                       class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $active ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-900/40' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $active ? 'bg-white/20 text-white' : 'bg-slate-800 text-purple-400' }}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        </div>
+                        <span>Pengguna / Saksi TPS</span>
+                    </a>
+
+                    {{-- Data Calon Lurah (Khusus Admin) --}}
                     @php $active = request()->routeIs('candidates.*'); @endphp
                     <a href="{{ route('candidates.index') }}"
                        class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $active ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-900/40' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $active ? 'bg-white/20 text-white' : 'bg-slate-800 text-emerald-400' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         </div>
-                        <span>Data Calon Lurah (Lawan)</span>
+                        <span>Data Calon (Kandidat)</span>
                     </a>
+                    @endif
 
                     @php $active = request()->routeIs('profile.*'); @endphp
                     <a href="{{ route('profile.edit') }}"
@@ -201,13 +244,24 @@
 
         {{-- Sidebar User Profile Card at Bottom --}}
         <div class="p-4 border-t border-slate-800/80 bg-slate-950/60">
-            <div class="flex items-center gap-3 p-2 rounded-xl bg-slate-900 border border-slate-800">
+            <div class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900 border border-slate-800">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-extrabold text-sm shadow-md">
                     {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-white text-xs font-bold truncate leading-tight">{{ Auth::user()->name ?? 'Administrator' }}</p>
-                    <p class="text-slate-400 text-[11px] truncate mt-0.5">{{ Auth::user()->email ?? 'admin@example.com' }}</p>
+                    <div class="flex items-center gap-1.5">
+                        <p class="text-white text-xs font-bold truncate leading-tight">{{ Auth::user()->name ?? 'User' }}</p>
+                        <span class="px-1.5 py-0.2 rounded text-[10px] font-extrabold {{ Auth::user()->isAdmin() ? 'bg-emerald-500/20 text-emerald-400' : 'bg-sky-500/20 text-sky-400' }}">
+                            {{ Auth::user()->isAdmin() ? 'Admin' : 'Saksi' }}
+                        </span>
+                    </div>
+                    <p class="text-slate-400 text-[11px] truncate mt-0.5">
+                        @if(Auth::user()->isSaksi() && Auth::user()->tps)
+                            📍 {{ Auth::user()->tps->nama_tps }}
+                        @else
+                            {{ Auth::user()->email ?? 'admin@example.com' }}
+                        @endif
+                    </p>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

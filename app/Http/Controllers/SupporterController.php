@@ -10,9 +10,16 @@ class SupporterController extends Controller
 {
     public function index(Request $request)
     {
-        $tpsList     = Tps::orderBy('nama_tps')->get();
+        $user = $request->user();
         $selectedTps = $request->query('tps_id');
         $search      = $request->query('search');
+
+        if ($user->isSaksi() && $user->tps_id) {
+            $tpsList     = Tps::where('id', $user->tps_id)->get();
+            $selectedTps = $user->tps_id;
+        } else {
+            $tpsList     = Tps::orderBy('nama_tps')->get();
+        }
 
         $supporters = Voter::with('tps')
             ->where('is_supporter', true)
@@ -23,8 +30,12 @@ class SupporterController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $totalSupportersCount = Voter::where('is_supporter', true)->count();
+        $totalSupportersQuery = Voter::where('is_supporter', true);
+        if ($user->isSaksi() && $user->tps_id) {
+            $totalSupportersQuery->where('tps_id', $user->tps_id);
+        }
+        $totalSupportersCount = $totalSupportersQuery->count();
 
-        return view('supporters.index', compact('supporters', 'tpsList', 'selectedTps', 'search', 'totalSupportersCount'));
+        return view('supporters.index', compact('supporters', 'tpsList', 'selectedTps', 'search', 'totalSupportersCount', 'user'));
     }
 }
