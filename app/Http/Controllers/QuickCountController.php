@@ -196,4 +196,34 @@ class QuickCountController extends Controller
 
         return redirect()->back()->with('success', "Hasil Quick Count untuk {$tp->nama_tps} berhasil disimpan.");
     }
+
+    /**
+     * Reset / Hapus Hasil Quick Count sebuah TPS
+     * Admin dapat mereset semua TPS, Saksi hanya bisa mereset TPS miliknya.
+     */
+    public function reset(Request $request, Tps $tp)
+    {
+        $user = $request->user();
+
+        // Otorisasi: saksi hanya bisa reset TPS miliknya
+        if ($user->isSaksi() && $user->tps_id !== $tp->id) {
+            return redirect()->back()->with('error', 'Anda hanya berhak mereset data TPS yang ditugaskan kepada Anda.');
+        }
+
+        // Hapus data pivot quick count per kandidat
+        TpsQuickCandidateResult::where('tps_id', $tp->id)->delete();
+
+        // Reset kolom quick count di tabel tps
+        $tp->update([
+            'quick_suara_kandidat'  => 0,
+            'quick_suara_lawan'     => 0,
+            'quick_suara_tidak_sah' => 0,
+            'quick_catatan_saksi'   => null,
+            'quick_is_submitted'    => false,
+            'quick_waktu_input'     => null,
+        ]);
+
+        return redirect()->back()->with('success', "Data Quick Count untuk {$tp->nama_tps} berhasil direset.");
+    }
 }
+

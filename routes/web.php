@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Quick Count (Fitur Hitung Cepat TPS)
     Route::get('/quickcount', [QuickCountController::class, 'index'])->name('quickcount.index');
     Route::put('/quickcount/{tp}', [QuickCountController::class, 'update'])->name('quickcount.update');
+    Route::delete('/quickcount/{tp}/reset', [QuickCountController::class, 'reset'])->name('quickcount.reset');
 
     // Rekap Quick Count vs Pendukung
     Route::get('/rekap-quick', [RekapQuickController::class, 'index'])->name('rekap-quick.index');
