@@ -138,26 +138,6 @@
                         </div>
                         @endforeach
 
-                        {{-- Tidak Sah --}}
-                        @if($quickSuaraTidakSah > 0)
-                        @php $pctTs = $quickSuaraMasuk > 0 ? round(($quickSuaraTidakSah / $quickSuaraMasuk) * 100, 1) : 0; @endphp
-                        <div class="flex items-center gap-3">
-                            <div class="w-3 h-3 rounded-full flex-shrink-0 bg-slate-400"></div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between mb-1 gap-2">
-                                    <p class="text-xs font-extrabold text-slate-500 truncate">Suara Tidak Sah</p>
-                                    <div class="flex items-center gap-2 flex-shrink-0">
-                                        <span class="text-xs font-black text-slate-700">{{ number_format($quickSuaraTidakSah) }}</span>
-                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-400 text-white">{{ $pctTs }}%</span>
-                                    </div>
-                                </div>
-                                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                    <div class="h-1.5 rounded-full bg-slate-400" style="width: {{ min(100, $pctTs) }}%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        @endif
-
                         {{-- Total Suara Sah --}}
                         <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
                             <p class="text-xs font-bold text-slate-500">Total Suara Sah</p>

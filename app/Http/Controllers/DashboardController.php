@@ -81,12 +81,6 @@ class DashboardController extends Controller
             $quickPieColors[] = $candidate->warna_badge ?? $defaultColors[$idx % count($defaultColors)];
         }
 
-        // Tambahkan suara tidak sah
-        if ($quickSuaraTidakSah > 0 || $quickSuaraMasuk == 0) {
-            $quickPieLabels[] = 'Suara Tidak Sah';
-            $quickPieData[]   = (int) $quickSuaraTidakSah;
-            $quickPieColors[] = '#94a3b8';
-        }
 
         $quickPersentaseKandidat = $quickSuaraSah > 0
             ? round(($quickSuaraKandidat / $quickSuaraSah) * 100, 1)
