@@ -174,28 +174,43 @@
                 </div>
             </div>
 
-            {{-- Card: Unggul Quick Count --}}
+            {{-- Card: Surat Suara Masuk vs Total DPT --}}
             <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex-1">
-                @if($hasQuickData && $mainCandidate)
-                <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Unggul Quick Count</p>
-                <p class="text-xl font-extrabold text-slate-900 leading-tight truncate">{{ Str::words($mainCandidate->nama, 2) }}</p>
-                <div class="mt-3 flex items-end gap-2">
-                    <p class="text-3xl font-extrabold tracking-tight" style="color: {{ $mainCandidate->warna_badge ?? '#6366f1' }}">
-                        {{ $quickPersentaseKandidat }}%
-                    </p>
-                    <p class="text-slate-400 text-xs font-bold mb-1">dari suara sah</p>
+                @php
+                    $pctSuaraMasuk = $totalVoters > 0
+                        ? round(($quickSuaraMasuk / $totalVoters) * 100, 1)
+                        : 0;
+                    $suaraMasukColor = $pctSuaraMasuk >= 75
+                        ? '#10b981'   // emerald
+                        : ($pctSuaraMasuk >= 50 ? '#f59e0b' : '#6366f1'); // amber / indigo
+                @endphp
+                <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Surat Suara Masuk</p>
+                <div class="flex items-end justify-between gap-2 mt-1">
+                    <div>
+                        <p class="text-3xl font-extrabold tracking-tight text-slate-900 leading-none">
+                            {{ number_format($quickSuaraMasuk) }}
+                        </p>
+                        <p class="text-xs text-slate-400 font-semibold mt-1">dari {{ number_format($totalVoters) }} DPT</p>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-2xl font-black tracking-tight" style="color: {{ $suaraMasukColor }}">
+                            {{ $pctSuaraMasuk }}%
+                        </p>
+                        <p class="text-[10px] text-slate-400 font-bold">partisipasi</p>
+                    </div>
                 </div>
-                <div class="mt-3 w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div class="h-2 rounded-full transition-all duration-700" style="width: {{ min(100, $quickPersentaseKandidat) }}%; background-color: {{ $mainCandidate->warna_badge ?? '#6366f1' }}"></div>
+
+                {{-- Progress bar --}}
+                <div class="mt-4 w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div class="h-2.5 rounded-full transition-all duration-700"
+                         style="width: {{ min(100, $pctSuaraMasuk) }}%; background-color: {{ $suaraMasukColor }}"></div>
                 </div>
-                <p class="text-slate-500 text-xs font-semibold mt-2">{{ number_format($quickSuaraKandidat) }} dari {{ number_format($quickSuaraSah) }} suara sah</p>
-                @else
-                <div class="flex flex-col items-center justify-center h-full py-6 text-center">
-                    <p class="text-3xl mb-2">🗳️</p>
-                    <p class="text-sm font-extrabold text-slate-700">Menunggu Data Quick Count</p>
-                    <p class="text-xs text-slate-400 mt-1">Akan tampil otomatis setelah ada input dari saksi TPS</p>
+
+                {{-- Keterangan suara sah vs tidak sah --}}
+                <div class="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                    <span>Suara Sah: <span class="text-slate-800">{{ number_format($quickSuaraSah) }}</span></span>
+                    <span>Tidak Sah: <span class="text-slate-800">{{ number_format($quickSuaraTidakSah) }}</span></span>
                 </div>
-                @endif
             </div>
 
         </div>
