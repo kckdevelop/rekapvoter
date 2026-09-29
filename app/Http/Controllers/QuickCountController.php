@@ -69,9 +69,8 @@ class QuickCountController extends Controller
         $allTps = Tps::all();
         $totalTpsCount      = $allTps->count();
         $tpsSubmittedCount  = $allTps->where('quick_is_submitted', true)->count();
-        $totalSuaraTidakSah = $allTps->sum('quick_suara_tidak_sah');
         $totalSuaraSah      = $totalSuaraKandidat + $totalSuaraLawan;
-        $totalSuaraMasuk    = $totalSuaraSah + $totalSuaraTidakSah;
+        $totalSuaraMasuk    = $totalSuaraSah;
 
         // Persentase Suara Quick Count
         $persentaseKemenangan = $totalSuaraSah > 0 ? round(($totalSuaraKandidat / $totalSuaraSah) * 100, 1) : 0;
@@ -115,7 +114,6 @@ class QuickCountController extends Controller
             'tpsSubmittedCount',
             'totalSuaraKandidat',
             'totalSuaraLawan',
-            'totalSuaraTidakSah',
             'totalSuaraSah',
             'totalSuaraMasuk',
             'persentaseKemenangan',
@@ -148,7 +146,6 @@ class QuickCountController extends Controller
         $validated = $request->validate([
             'votes'           => 'required|array',
             'votes.*'         => 'required|integer|min:0',
-            'suara_tidak_sah' => 'nullable|integer|min:0',
             'catatan_saksi'   => 'nullable|string|max:500',
         ], [
             'votes.required'   => 'Data perolehan suara per calon wajib diisi.',
@@ -188,7 +185,7 @@ class QuickCountController extends Controller
         $tp->update([
             'quick_suara_kandidat'   => $suaraKandidatUtama,
             'quick_suara_lawan'      => $suaraLawanTotal,
-            'quick_suara_tidak_sah'  => (int) ($validated['suara_tidak_sah'] ?? 0),
+            'quick_suara_tidak_sah'  => 0,
             'quick_catatan_saksi'    => $validated['catatan_saksi'] ?? null,
             'quick_is_submitted'     => true,
             'quick_waktu_input'      => now(),

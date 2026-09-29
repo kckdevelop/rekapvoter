@@ -119,11 +119,11 @@ class Tps extends Model
     }
 
     /**
-     * Total Suara Masuk Quick Count
+     * Total Suara Masuk Quick Count (Hanya Suara Sah)
      */
     public function getQuickTotalSuaraMasukAttribute(): int
     {
-        return $this->quick_suara_sah + ($this->quick_suara_tidak_sah ?? 0);
+        return $this->quick_suara_sah;
     }
 
     /**

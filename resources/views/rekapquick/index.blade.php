@@ -128,7 +128,6 @@
                         <th class="px-4 py-4 text-center">Selisih (Quick - Target)</th>
                         <th class="px-4 py-4 text-center">% Konversi Target</th>
                         <th class="px-4 py-4 text-center">Status Keberhasilan Target</th>
-                        <th class="px-4 py-4 text-center">Tidak Sah</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -242,14 +241,10 @@
                                 </span>
                             @endif
                         </td>
-
-                        <td class="px-4 py-4 text-center text-amber-700 font-medium">
-                            {{ $tps->quick_is_submitted ? number_format($tps->quick_suara_tidak_sah) : '—' }}
-                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center text-slate-400 font-semibold">Belum Ada Data TPS</td>
+                        <td colspan="8" class="px-6 py-12 text-center text-slate-400 font-semibold">Belum Ada Data TPS</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -268,7 +263,6 @@
                                 {{ $statusKeberhasilanOverall }}
                             </span>
                         </td>
-                        <td class="px-4 py-4 text-center text-amber-300">{{ number_format($totalSuaraTidakSah) }}</td>
                     </tr>
                 </tfoot>
             </table>

@@ -11,7 +11,6 @@
         editId: null,
         editName: '',
         editVotes: {},
-        editTidakSah: 0,
         editCatatan: '',
 
         resetModalOpen: false,
@@ -23,7 +22,6 @@
         editId = $event.detail.id;
         editName = $event.detail.name;
         editVotes = $event.detail.votes || {};
-        editTidakSah = $event.detail.tidak_sah || 0;
         editCatatan = $event.detail.catatan || '';
      "
      @open-reset-modal.window="
@@ -53,7 +51,7 @@
     @endif
 
     {{-- ===== STATISTIC CARDS (QUICK COUNT) ===== --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-{{ min(6, 2 + $candidates->count()) }} gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-{{ min(6, 1 + $candidates->count()) }} gap-4">
         
         {{-- Card: Progress TPS Quick Count Masuk --}}
         <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex items-center gap-4">
@@ -97,17 +95,6 @@
             </div>
         @endif
         @endforeach
-
-        {{-- Card: Suara Tidak Sah --}}
-        <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center font-extrabold text-lg shadow-inner">
-                ⚠️
-            </div>
-            <div>
-                <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">QC: Suara Tidak Sah</p>
-                <p class="text-2xl font-extrabold text-slate-700 mt-0.5 tracking-tight">{{ number_format($totalSuaraTidakSah) }}</p>
-            </div>
-        </div>
 
     </div>
 
@@ -163,7 +150,6 @@
                         </th>
                         @endforeach
 
-                        <th class="px-4 py-4 text-center">Tidak Sah</th>
                         <th class="px-4 py-4 text-center">Status QC</th>
                         <th class="px-4 py-4 text-center">Hasil Quick Count</th>
                         <th class="px-6 py-4 text-right">Aksi</th>
@@ -233,15 +219,6 @@
 
                         <td class="px-4 py-4 text-center">
                             @if($tps->quick_is_submitted)
-                                <span class="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
-                                    {{ number_format($tps->quick_suara_tidak_sah) }}
-                                </span>
-                            @else
-                                <span class="text-slate-300 font-bold">—</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-4 text-center">
-                            @if($tps->quick_is_submitted)
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
                                     ⚡ Terinput
                                 </span>
@@ -278,7 +255,6 @@
                                             id: {{ $tps->id }},
                                             name: '{{ addslashes($tps->nama_tps) }}',
                                             votes: {{ json_encode($votesMap) }},
-                                            tidak_sah: {{ $tps->quick_suara_tidak_sah ?? 0 }},
                                             catatan: '{{ addslashes($tps->quick_catatan_saksi ?? '') }}'
                                         })"
                                         class="inline-flex items-center gap-1 text-xs bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-2 rounded-xl transition-colors shadow-sm cursor-pointer">
@@ -304,7 +280,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ 7 + $candidates->count() }}" class="px-6 py-12 text-center text-slate-400 font-semibold">Belum Ada Data TPS</td>
+                        <td colspan="{{ 6 + $candidates->count() }}" class="px-6 py-12 text-center text-slate-400 font-semibold">Belum Ada Data TPS</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -370,15 +346,6 @@
                            class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-base font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
                 </div>
                 @endforeach
-
-                {{-- Suara Tidak Sah --}}
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
-                    <label for="qc_suara_tidak_sah" class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-                        ⚠️ Suara Tidak Sah / Rusak
-                    </label>
-                    <input type="number" id="qc_suara_tidak_sah" name="suara_tidak_sah" x-model.number="editTidakSah" min="0" placeholder="0"
-                           class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-base font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 shadow-sm">
-                </div>
 
                 {{-- Catatan Saksi --}}
                 <div>

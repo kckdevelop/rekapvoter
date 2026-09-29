@@ -48,9 +48,8 @@ class RekapQuickController extends Controller
         $totalSupporters     = $rekapTps->sum('supporters_count');
         $totalSuaraKandidat  = $rekapTps->sum('quick_suara_kandidat');
         $totalSuaraLawan     = $rekapTps->sum('quick_suara_lawan');
-        $totalSuaraTidakSah  = $rekapTps->sum('quick_suara_tidak_sah');
         $totalSuaraSah       = $totalSuaraKandidat + $totalSuaraLawan;
-        $totalSuaraMasuk     = $totalSuaraSah + $totalSuaraTidakSah;
+        $totalSuaraMasuk     = $totalSuaraSah;
 
         // Persentase Suara Quick vs Sah
         $persentaseSuaraKandidat = $totalSuaraSah > 0 ? round(($totalSuaraKandidat / $totalSuaraSah) * 100, 1) : 0;
@@ -89,7 +88,6 @@ class RekapQuickController extends Controller
             'totalSupporters',
             'totalSuaraKandidat',
             'totalSuaraLawan',
-            'totalSuaraTidakSah',
             'totalSuaraSah',
             'totalSuaraMasuk',
             'persentaseSuaraKandidat',
@@ -126,7 +124,6 @@ class RekapQuickController extends Controller
         $totalSupporters     = $rekapTps->sum('supporters_count');
         $totalSuaraKandidat  = $rekapTps->sum('quick_suara_kandidat');
         $totalSuaraLawan     = $rekapTps->sum('quick_suara_lawan');
-        $totalSuaraTidakSah  = $rekapTps->sum('quick_suara_tidak_sah');
         $totalSuaraSah       = $totalSuaraKandidat + $totalSuaraLawan;
         $persentaseKemenangan = $totalSuaraSah > 0 ? round(($totalSuaraKandidat / $totalSuaraSah) * 100, 1) : 0;
         $persentaseKonversi   = $totalSupporters > 0 ? round(($totalSuaraKandidat / $totalSupporters) * 100, 1) : 0;
@@ -138,7 +135,6 @@ class RekapQuickController extends Controller
             'totalSupporters',
             'totalSuaraKandidat',
             'totalSuaraLawan',
-            'totalSuaraTidakSah',
             'totalSuaraSah',
             'persentaseKemenangan',
             'persentaseKonversi'

@@ -88,7 +88,6 @@
                     <th class="border border-slate-300 p-2 text-center">Selisih</th>
                     <th class="border border-slate-300 p-2 text-center">% Konversi Target</th>
                     <th class="border border-slate-300 p-2 text-center">Status Keberhasilan Target</th>
-                    <th class="border border-slate-300 p-2 text-center">Tidak Sah</th>
                 </tr>
             </thead>
             <tbody>
@@ -143,9 +142,6 @@
                             <span class="text-rose-700">Belum Tercapai ({{ $pctKonversi }}%)</span>
                         @endif
                     </td>
-                    <td class="border border-slate-300 p-2 text-center font-semibold text-amber-800">
-                        {{ $tps->quick_is_submitted ? number_format($tps->quick_suara_tidak_sah) : '—' }}
-                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -160,7 +156,6 @@
                     <td class="border border-slate-300 p-2.5 text-center font-extrabold text-indigo-800">
                         {{ $totalSupporters == 0 ? ($totalSuaraKandidat > 0 ? 'Surplus' : 'Belum Ada Target') : ($persentaseKonversi >= 100 ? 'Melampaui Target' : ($persentaseKonversi >= 75 ? 'Capaian High' : 'Belum Tercapai')) }}
                     </td>
-                    <td class="border border-slate-300 p-2.5 text-center">{{ number_format($totalSuaraTidakSah) }}</td>
                 </tr>
             </tfoot>
         </table>
