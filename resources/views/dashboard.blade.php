@@ -67,14 +67,17 @@
         <div class="lg:col-span-3 bg-white rounded-3xl p-6 lg:p-8 border border-slate-200/80 shadow-sm">
             <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6">
                 <div>
-                    <div class="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full uppercase tracking-wider mb-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        Live Quick Count
+                    <div class="inline-flex items-center gap-2 text-[10px] font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>Live Quick Count</span>
                     </div>
                     <h2 class="text-lg font-extrabold text-slate-900 tracking-tight">Perolehan Suara Quick Count</h2>
                     <p class="text-slate-500 text-xs mt-0.5">
                         Distribusi suara sementara dari
-                        <span class="font-bold text-indigo-600">{{ $totalQuickSubmitted }} dari {{ $totalTps }} TPS</span>
+                        <span id="live-tps-summary" class="font-bold text-indigo-600">{{ $totalQuickSubmitted }} dari {{ $totalTps }} TPS</span>
                         yang sudah menginput data
                     </p>
                 </div>
@@ -84,37 +87,37 @@
                 </a>
             </div>
 
-            @if(!$hasQuickData)
-                {{-- Empty State --}}
-                <div class="flex flex-col items-center justify-center py-16 text-center">
-                    <div class="w-20 h-20 rounded-3xl bg-indigo-50 flex items-center justify-center mb-5">
-                        <svg class="w-10 h-10 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
-                        </svg>
-                    </div>
-                    <p class="text-slate-700 font-extrabold text-sm">Belum Ada Data Quick Count</p>
-                    <p class="text-slate-400 text-xs mt-1.5 max-w-xs">Saksi TPS belum menginput perolehan suara sementara. Data akan tampil otomatis setelah ada input.</p>
-                    <a href="{{ route('quickcount.index') }}" class="mt-5 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-colors shadow-sm">
-                        Input Quick Count Sekarang
-                    </a>
+            {{-- Empty State --}}
+            <div id="quick-empty-state" class="{{ $hasQuickData ? 'hidden' : '' }} flex flex-col items-center justify-center py-16 text-center">
+                <div class="w-20 h-20 rounded-3xl bg-indigo-50 flex items-center justify-center mb-5">
+                    <svg class="w-10 h-10 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                    </svg>
                 </div>
-            @else
-                {{-- PIE CHART --}}
-                <div class="flex flex-col sm:flex-row items-center gap-8">
-                    {{-- Chart Canvas --}}
-                    <div class="relative flex-shrink-0" style="width: 220px; height: 220px;">
-                        <canvas id="quickPieChart"></canvas>
-                        {{-- Centre label --}}
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Suara Masuk</p>
-                            <p class="text-2xl font-extrabold text-slate-900 leading-tight">{{ number_format($quickSuaraMasuk) }}</p>
-                            <p class="text-[10px] font-bold text-slate-400 mt-0.5">suara</p>
-                        </div>
-                    </div>
+                <p class="text-slate-700 font-extrabold text-sm">Belum Ada Data Quick Count</p>
+                <p class="text-slate-400 text-xs mt-1.5 max-w-xs">Saksi TPS belum menginput perolehan suara sementara. Data akan tampil otomatis setelah ada input.</p>
+                <a href="{{ route('quickcount.index') }}" class="mt-5 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-colors shadow-sm">
+                    Input Quick Count Sekarang
+                </a>
+            </div>
 
-                    {{-- Legend & Stats --}}
-                    <div class="flex-1 w-full space-y-3">
+            {{-- PIE CHART CONTAINER --}}
+            <div id="quick-chart-container" class="{{ $hasQuickData ? '' : 'hidden' }} flex flex-col sm:flex-row items-center gap-8">
+                {{-- Chart Canvas --}}
+                <div class="relative flex-shrink-0" style="width: 220px; height: 220px;">
+                    <canvas id="quickPieChart"></canvas>
+                    {{-- Centre label --}}
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Suara Masuk</p>
+                        <p id="live-quick-center-suara" class="text-2xl font-extrabold text-slate-900 leading-tight">{{ number_format($quickSuaraMasuk) }}</p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-0.5">suara</p>
+                    </div>
+                </div>
+
+                {{-- Legend & Stats --}}
+                <div class="flex-1 w-full space-y-3">
+                    <div id="live-candidate-list" class="space-y-3">
                         @foreach($candidates as $idx => $candidate)
                         @php
                             $suaraCand = $quickPieData[$idx] ?? 0;
@@ -137,15 +140,15 @@
                             </div>
                         </div>
                         @endforeach
+                    </div>
 
-                        {{-- Total Suara Sah --}}
-                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-                            <p class="text-xs font-bold text-slate-500">Total Suara Sah</p>
-                            <p class="text-sm font-extrabold text-slate-900">{{ number_format($quickSuaraSah) }} <span class="text-slate-400 font-medium text-xs">suara</span></p>
-                        </div>
+                    {{-- Total Suara Sah --}}
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <p class="text-xs font-bold text-slate-500">Total Suara Sah</p>
+                        <p class="text-sm font-extrabold text-slate-900"><span id="live-quick-suara-sah">{{ number_format($quickSuaraSah) }}</span> <span class="text-slate-400 font-medium text-xs">suara</span></p>
                     </div>
                 </div>
-            @endif
+            </div>
         </div>
 
         {{-- Quick Count Stats Panel --}}
@@ -157,29 +160,27 @@
                     <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 text-xl backdrop-blur-md">⚡</div>
                     <div>
                         <p class="text-indigo-100 text-[11px] font-extrabold uppercase tracking-wider">TPS Input Quick Count</p>
-                        <p class="text-3xl font-extrabold tracking-tight mt-0.5">{{ $totalQuickSubmitted }}<span class="text-indigo-300 text-lg font-bold"> / {{ $totalTps }}</span></p>
+                        <p class="text-3xl font-extrabold tracking-tight mt-0.5">
+                            <span id="live-tps-submitted-count">{{ $totalQuickSubmitted }}</span><span class="text-indigo-300 text-lg font-bold"> / <span id="live-total-tps-count">{{ $totalTps }}</span></span>
+                        </p>
                     </div>
                 </div>
                 {{-- Progress Bar --}}
                 <div class="mt-5">
-                    @php $pctTps = $totalTps > 0 ? round(($totalQuickSubmitted / $totalTps) * 100) : 0; @endphp
                     <div class="flex items-center justify-between mb-1.5">
                         <p class="text-indigo-200 text-xs font-bold">Progress Input</p>
-                        <p class="text-white text-xs font-extrabold">{{ $pctTps }}%</p>
+                        <p id="live-tps-pct" class="text-white text-xs font-extrabold">{{ $pctTps }}%</p>
                     </div>
                     <div class="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                        <div class="h-2 rounded-full bg-white transition-all duration-700" style="width: {{ $pctTps }}%"></div>
+                        <div id="live-tps-progress-bar" class="h-2 rounded-full bg-white transition-all duration-700" style="width: {{ $pctTps }}%"></div>
                     </div>
-                    <p class="text-indigo-200 text-[10px] mt-1.5">{{ $totalTps - $totalQuickSubmitted }} TPS belum input</p>
+                    <p class="text-indigo-200 text-[10px] mt-1.5"><span id="live-tps-belum-input">{{ $tpsBelumInput }}</span> TPS belum input</p>
                 </div>
             </div>
 
             {{-- Card: Surat Suara Masuk vs Total DPT --}}
             <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex-1">
                 @php
-                    $pctSuaraMasuk = $totalVoters > 0
-                        ? round(($quickSuaraMasuk / $totalVoters) * 100, 1)
-                        : 0;
                     $suaraMasukColor = $pctSuaraMasuk >= 75
                         ? '#10b981'   // emerald
                         : ($pctSuaraMasuk >= 50 ? '#f59e0b' : '#6366f1'); // amber / indigo
@@ -187,13 +188,13 @@
                 <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Surat Suara Masuk</p>
                 <div class="flex items-end justify-between gap-2 mt-1">
                     <div>
-                        <p class="text-3xl font-extrabold tracking-tight text-slate-900 leading-none">
+                        <p id="live-suara-masuk-count" class="text-3xl font-extrabold tracking-tight text-slate-900 leading-none">
                             {{ number_format($quickSuaraMasuk) }}
                         </p>
-                        <p class="text-xs text-slate-400 font-semibold mt-1">dari {{ number_format($totalVoters) }} DPT</p>
+                        <p class="text-xs text-slate-400 font-semibold mt-1">dari <span id="live-total-voters-count">{{ number_format($totalVoters) }}</span> DPT</p>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <p class="text-2xl font-black tracking-tight" style="color: {{ $suaraMasukColor }}">
+                        <p id="live-partisipasi-pct" class="text-2xl font-black tracking-tight" style="color: {{ $suaraMasukColor }}">
                             {{ $pctSuaraMasuk }}%
                         </p>
                         <p class="text-[10px] text-slate-400 font-bold">partisipasi</p>
@@ -202,14 +203,14 @@
 
                 {{-- Progress bar --}}
                 <div class="mt-4 w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                    <div class="h-2.5 rounded-full transition-all duration-700"
+                    <div id="live-partisipasi-bar" class="h-2.5 rounded-full transition-all duration-700"
                          style="width: {{ min(100, $pctSuaraMasuk) }}%; background-color: {{ $suaraMasukColor }}"></div>
                 </div>
 
                 {{-- Keterangan suara sah vs tidak sah --}}
                 <div class="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500">
-                    <span>Suara Sah: <span class="text-slate-800">{{ number_format($quickSuaraSah) }}</span></span>
-                    <span>Tidak Sah: <span class="text-slate-800">{{ number_format($quickSuaraTidakSah) }}</span></span>
+                    <span>Suara Sah: <span id="live-suara-sah-count" class="text-slate-800">{{ number_format($quickSuaraSah) }}</span></span>
+                    <span>Tidak Sah: <span id="live-suara-tidak-sah-count" class="text-slate-800">{{ number_format($quickSuaraTidakSah) }}</span></span>
                 </div>
             </div>
 
@@ -280,64 +281,200 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // ===== PIE CHART QUICK COUNT =====
-    @if($hasQuickData)
-    (function () {
-        const pieCtx = document.getElementById('quickPieChart');
-        if (!pieCtx) return;
+    // ===== LIVE QUICK COUNT REAL-TIME LOGIC =====
+    let quickChart = null;
 
-        const labels = @json($quickPieLabels);
-        const data   = @json($quickPieData);
-        const colors = @json($quickPieColors);
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
 
-        // Slightly transparent versions for hover
+    function initOrUpdateQuickChart(labels, data, colors) {
+        const pieCanvas = document.getElementById('quickPieChart');
+        if (!pieCanvas) return;
+
         const hoverColors = colors.map(c => c + 'cc');
 
-        new Chart(pieCtx.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: colors,
-                    hoverBackgroundColor: hoverColors,
-                    borderColor: '#ffffff',
-                    borderWidth: 3,
-                    hoverBorderWidth: 4,
-                    hoverOffset: 8,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '68%',
-                animation: {
-                    animateRotate: true,
-                    animateScale: false,
-                    duration: 900,
-                    easing: 'easeOutQuart',
+        if (!quickChart) {
+            quickChart = new Chart(pieCanvas.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        hoverBackgroundColor: hoverColors,
+                        borderColor: '#ffffff',
+                        borderWidth: 3,
+                        hoverBorderWidth: 4,
+                        hoverOffset: 8,
+                    }]
                 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#0f172a',
-                        titleColor: '#ffffff',
-                        bodyColor: '#94a3b8',
-                        padding: 14,
-                        cornerRadius: 12,
-                        callbacks: {
-                            label: function(ctx) {
-                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                const pct   = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
-                                return ` ${ctx.parsed.toLocaleString('id-ID')} suara (${pct}%)`;
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    animation: {
+                        animateRotate: true,
+                        animateScale: false,
+                        duration: 600,
+                        easing: 'easeOutQuart',
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleColor: '#ffffff',
+                            bodyColor: '#94a3b8',
+                            padding: 14,
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(ctx) {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct   = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.parsed.toLocaleString('id-ID')} suara (${pct}%)`;
+                                }
                             }
                         }
                     }
                 }
-            }
+            });
+        } else {
+            quickChart.data.labels = labels;
+            quickChart.data.datasets[0].data = data;
+            quickChart.data.datasets[0].backgroundColor = colors;
+            quickChart.data.datasets[0].hoverBackgroundColor = hoverColors;
+            quickChart.update();
+        }
+    }
+
+    function renderCandidateList(candidates) {
+        const container = document.getElementById('live-candidate-list');
+        if (!container || !candidates) return;
+
+        let html = '';
+        candidates.forEach(c => {
+            html += `
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${c.warna}"></div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1 gap-2">
+                        <p class="text-xs font-extrabold text-slate-800 truncate">No. ${c.nomor_urut} — ${escapeHtml(c.nama)}</p>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <span class="text-xs font-black text-slate-900">${c.suara.toLocaleString('id-ID')}</span>
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white" style="background-color: ${c.warna}">${c.pct}%</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div class="h-1.5 rounded-full transition-all duration-700" style="width: ${Math.min(100, c.pct)}%; background-color: ${c.warna}"></div>
+                    </div>
+                </div>
+            </div>`;
         });
-    })();
+        container.innerHTML = html;
+    }
+
+    @if($hasQuickData)
+    // Initial Chart Render
+    initOrUpdateQuickChart(@json($quickPieLabels), @json($quickPieData), @json($quickPieColors));
     @endif
+
+    // Live Polling Routine
+    async function updateDashboardLive() {
+        if (document.hidden) return; // Pause polling when tab is inactive
+
+        try {
+            const response = await fetch('{{ route('dashboard.live-data') }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) return;
+            const data = await response.json();
+
+            // 1. Update Header Summary
+            const tpsSummary = document.getElementById('live-tps-summary');
+            if (tpsSummary) tpsSummary.textContent = `${data.totalQuickSubmitted} dari ${data.totalTps} TPS`;
+
+            // 2. Toggle Empty State vs Chart Container
+            const emptyState = document.getElementById('quick-empty-state');
+            const chartContainer = document.getElementById('quick-chart-container');
+
+            if (data.hasQuickData) {
+                if (emptyState) emptyState.classList.add('hidden');
+                if (chartContainer) chartContainer.classList.remove('hidden');
+
+                // Update Doughnut Chart & Center Text
+                initOrUpdateQuickChart(data.quickPieLabels, data.quickPieData, data.quickPieColors);
+                const centerSuara = document.getElementById('live-quick-center-suara');
+                if (centerSuara) centerSuara.textContent = data.quickSuaraMasuk.toLocaleString('id-ID');
+
+                // Update Candidates List
+                renderCandidateList(data.candidateBreakdown);
+
+                // Update Total Suara Sah
+                const suaraSahQuick = document.getElementById('live-quick-suara-sah');
+                if (suaraSahQuick) suaraSahQuick.textContent = data.quickSuaraSah.toLocaleString('id-ID');
+            } else {
+                if (emptyState) emptyState.classList.remove('hidden');
+                if (chartContainer) chartContainer.classList.add('hidden');
+            }
+
+            // 3. Update TPS Input Quick Count Card
+            const tpsSubCount = document.getElementById('live-tps-submitted-count');
+            if (tpsSubCount) tpsSubCount.textContent = data.totalQuickSubmitted;
+
+            const tpsTotalCount = document.getElementById('live-total-tps-count');
+            if (tpsTotalCount) tpsTotalCount.textContent = data.totalTps;
+
+            const tpsPct = document.getElementById('live-tps-pct');
+            if (tpsPct) tpsPct.textContent = `${data.pctTps}%`;
+
+            const tpsProgBar = document.getElementById('live-tps-progress-bar');
+            if (tpsProgBar) tpsProgBar.style.width = `${data.pctTps}%`;
+
+            const tpsBelumInput = document.getElementById('live-tps-belum-input');
+            if (tpsBelumInput) tpsBelumInput.textContent = data.tpsBelumInput;
+
+            // 4. Update Surat Suara Masuk Card
+            const suaraMasukCount = document.getElementById('live-suara-masuk-count');
+            if (suaraMasukCount) suaraMasukCount.textContent = data.quickSuaraMasuk.toLocaleString('id-ID');
+
+            const totalVotersCount = document.getElementById('live-total-voters-count');
+            if (totalVotersCount) totalVotersCount.textContent = data.totalVoters.toLocaleString('id-ID');
+
+            const partisipasiColor = data.pctSuaraMasuk >= 75
+                ? '#10b981'
+                : (data.pctSuaraMasuk >= 50 ? '#f59e0b' : '#6366f1');
+
+            const partisipasiPct = document.getElementById('live-partisipasi-pct');
+            if (partisipasiPct) {
+                partisipasiPct.textContent = `${data.pctSuaraMasuk}%`;
+                partisipasiPct.style.color = partisipasiColor;
+            }
+
+            const partisipasiBar = document.getElementById('live-partisipasi-bar');
+            if (partisipasiBar) {
+                partisipasiBar.style.width = `${Math.min(100, data.pctSuaraMasuk)}%`;
+                partisipasiBar.style.backgroundColor = partisipasiColor;
+            }
+
+            const statSuaraSah = document.getElementById('live-suara-sah-count');
+            if (statSuaraSah) statSuaraSah.textContent = data.quickSuaraSah.toLocaleString('id-ID');
+
+            const statSuaraTidakSah = document.getElementById('live-suara-tidak-sah-count');
+            if (statSuaraTidakSah) statSuaraTidakSah.textContent = data.quickSuaraTidakSah.toLocaleString('id-ID');
+
+        } catch (e) {
+            console.error('Error fetching dashboard live data:', e);
+        }
+    }
+
+    // Run live auto-refresh every 3 seconds
+    setInterval(updateDashboardLive, 3000);
 
     // ===== BAR CHART TPS =====
     @if(!$chartLabels->isEmpty())

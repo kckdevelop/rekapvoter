@@ -5,14 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Candidate;
 use App\Models\Tps;
 use App\Models\Voter;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    private function getDashboardData($user)
     {
-        $user = $request->user();
-
         $tpsQuery = Tps::withCount([
             'voters',
             'voters as supporters_count' => fn($q) => $q->where('is_supporter', true),
@@ -64,6 +63,7 @@ class DashboardController extends Controller
         $quickPieLabels = [];
         $quickPieData   = [];
         $quickPieColors = [];
+        $candidateBreakdown = [];
 
         // Warna default dan warna fallback per kandidat
         $defaultColors = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -76,17 +76,35 @@ class DashboardController extends Controller
                     ? $tpsData->sum('quick_suara_kandidat')
                     : $tpsData->sum('quick_suara_lawan');
             }
+            $color = $candidate->warna_badge ?? $defaultColors[$idx % count($defaultColors)];
+            $pct = $quickSuaraMasuk > 0 ? round(($suara / $quickSuaraMasuk) * 100, 1) : 0;
+
             $quickPieLabels[] = "No. {$candidate->nomor_urut} — {$candidate->nama}";
             $quickPieData[]   = (int) $suara;
-            $quickPieColors[] = $candidate->warna_badge ?? $defaultColors[$idx % count($defaultColors)];
-        }
+            $quickPieColors[] = $color;
 
+            $candidateBreakdown[] = [
+                'id' => $candidate->id,
+                'nomor_urut' => $candidate->nomor_urut,
+                'nama' => $candidate->nama,
+                'warna' => $color,
+                'suara' => (int) $suara,
+                'suara_formatted' => number_format((int)$suara),
+                'pct' => $pct,
+            ];
+        }
 
         $quickPersentaseKandidat = $quickSuaraSah > 0
             ? round(($quickSuaraKandidat / $quickSuaraSah) * 100, 1)
             : 0;
 
-        return view('dashboard', compact(
+        $pctSuaraMasuk = $totalVoters > 0
+            ? round(($quickSuaraMasuk / $totalVoters) * 100, 1)
+            : 0;
+        $pctTps = $totalTps > 0 ? round(($totalQuickSubmitted / $totalTps) * 100) : 0;
+        $tpsBelumInput = max(0, $totalTps - $totalQuickSubmitted);
+
+        return compact(
             'totalTps',
             'totalVoters',
             'totalSupporters',
@@ -96,6 +114,7 @@ class DashboardController extends Controller
             'totalQuickSubmitted',
             'totalRealSubmitted',
             'candidates',
+            'candidateBreakdown',
             'quickPieLabels',
             'quickPieData',
             'quickPieColors',
@@ -105,8 +124,40 @@ class DashboardController extends Controller
             'quickSuaraSah',
             'quickSuaraMasuk',
             'quickPersentaseKandidat',
+            'pctSuaraMasuk',
+            'pctTps',
+            'tpsBelumInput',
             'user'
-        ));
+        );
+    }
+
+    public function index(Request $request)
+    {
+        $data = $this->getDashboardData($request->user());
+        return view('dashboard', $data);
+    }
+
+    public function liveData(Request $request): JsonResponse
+    {
+        $data = $this->getDashboardData($request->user());
+
+        return response()->json([
+            'totalTps' => $data['totalTps'],
+            'totalVoters' => $data['totalVoters'],
+            'totalSupporters' => $data['totalSupporters'],
+            'totalQuickSubmitted' => $data['totalQuickSubmitted'],
+            'pctTps' => $data['pctTps'],
+            'tpsBelumInput' => $data['tpsBelumInput'],
+            'quickSuaraMasuk' => $data['quickSuaraMasuk'],
+            'quickSuaraSah' => $data['quickSuaraSah'],
+            'quickSuaraTidakSah' => $data['quickSuaraTidakSah'],
+            'pctSuaraMasuk' => $data['pctSuaraMasuk'],
+            'hasQuickData' => $data['quickSuaraMasuk'] > 0,
+            'quickPieLabels' => $data['quickPieLabels'],
+            'quickPieData' => $data['quickPieData'],
+            'quickPieColors' => $data['quickPieColors'],
+            'candidateBreakdown' => $data['candidateBreakdown'],
+        ]);
     }
 }
 

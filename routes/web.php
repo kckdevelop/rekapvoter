@@ -22,6 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/live-data', [DashboardController::class, 'liveData'])->name('dashboard.live-data');
 
     // Quick Count (Fitur Hitung Cepat TPS)
     Route::get('/quickcount', [QuickCountController::class, 'index'])->name('quickcount.index');
