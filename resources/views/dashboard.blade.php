@@ -81,10 +81,16 @@
                         yang sudah menginput data
                     </p>
                 </div>
-                <a href="{{ route('rekap-quick.index') }}" class="flex-shrink-0 inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition-colors shadow-sm">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    Rekap Lengkap
-                </a>
+                <div class="flex items-center gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
+                    <button type="button" onclick="openQuickCountFullscreen()" class="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        <span>Layar Penuh (Fullscreen)</span>
+                    </button>
+                    <a href="{{ route('rekap-quick.index') }}" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition-colors shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Rekap Lengkap
+                    </a>
+                </div>
             </div>
 
             {{-- Empty State --}}
@@ -276,13 +282,210 @@
         </a>
     </div>
 </div>
+
+    {{-- ===== FULLSCREEN LIVE QUICK COUNT BROADCAST MODAL ===== --}}
+    <div id="quickCountFullscreenOverlay" class="hidden fixed inset-0 z-[99999] bg-slate-950 text-white flex flex-col justify-between overflow-y-auto selection:bg-indigo-500 selection:text-white" style="background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.2), transparent 60%), radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.12), transparent 50%), #050814;">
+        
+        {{-- Header Bar --}}
+        <div class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl sticky top-0 z-50 px-4 sm:px-8 py-3.5 sm:py-4 shadow-xl">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-950/50 flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-2.5 py-0.5 rounded-full shadow-inner">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                LIVE BROADCAST
+                            </span>
+                            <span class="text-slate-500 text-xs">•</span>
+                            <span class="text-slate-400 text-xs font-semibold">Hitung Cepat Pilkades</span>
+                        </div>
+                        <h1 class="text-lg sm:text-xl font-black text-white tracking-tight leading-tight">Live Tabulasi Quick Count Pemilihan</h1>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 sm:gap-4 flex-wrap self-end md:self-auto">
+                    {{-- Live Clock & Sync indicator --}}
+                    <div class="flex items-center gap-3 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-2xl shadow-inner">
+                        <div class="text-right">
+                            <p id="fs-digital-clock" class="text-xs sm:text-sm font-black text-white font-mono tracking-wider">--:--:-- WIB</p>
+                            <p class="text-[9px] font-bold text-emerald-400 uppercase tracking-widest flex items-center justify-end gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auto-Sync Aktif
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Close Fullscreen Button --}}
+                    <button type="button" onclick="closeQuickCountFullscreen()" class="inline-flex items-center gap-2 bg-rose-600/90 hover:bg-rose-600 text-white font-extrabold text-xs px-4 py-2.5 rounded-2xl border border-rose-500/40 shadow-lg shadow-rose-950/40 transition-all active:scale-95 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>Tutup Layar Penuh <span class="hidden sm:inline font-mono opacity-80 text-[10px] bg-white/20 px-1.5 py-0.5 rounded ml-1">ESC</span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Fullscreen Content Body --}}
+        <div class="max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 flex-1 flex flex-col justify-between gap-6">
+
+            {{-- Top 4 KPI Summary Cards --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {{-- 1. Total Suara Masuk --}}
+                <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 backdrop-blur-md shadow-xl flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[11px] font-extrabold text-indigo-400 uppercase tracking-wider">Total Suara Masuk</p>
+                        <span class="text-lg">📥</span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="fs-suara-masuk-count" class="text-2xl sm:text-3xl font-black text-white tracking-tight">{{ number_format($quickSuaraMasuk) }}</p>
+                        <p class="text-[11px] text-slate-400 font-semibold mt-1">Akumulasi seluruh TPS terinput</p>
+                    </div>
+                </div>
+
+                {{-- 2. Tingkat Partisipasi --}}
+                <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 backdrop-blur-md shadow-xl flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[11px] font-extrabold text-emerald-400 uppercase tracking-wider">Partisipasi DPT</p>
+                        <span class="text-lg">📊</span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline justify-between">
+                            <p id="fs-partisipasi-pct" class="text-2xl sm:text-3xl font-black text-white tracking-tight">{{ $pctSuaraMasuk }}%</p>
+                            <p class="text-[11px] text-slate-400 font-medium">dari <span id="fs-total-voters-count" class="font-bold text-white">{{ number_format($totalVoters) }}</span> DPT</p>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2.5 overflow-hidden">
+                            <div id="fs-partisipasi-bar" class="h-1.5 rounded-full bg-emerald-500 transition-all duration-700" style="width: {{ min(100, $pctSuaraMasuk) }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 3. TPS Masuk --}}
+                <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 backdrop-blur-md shadow-xl flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider">Progress TPS Masuk</p>
+                        <span class="text-lg">⚡</span>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline justify-between">
+                            <p class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                                <span id="fs-tps-submitted-count">{{ $totalQuickSubmitted }}</span><span class="text-slate-500 text-lg font-bold"> / <span id="fs-total-tps-count">{{ $totalTps }}</span></span>
+                            </p>
+                            <p id="fs-tps-pct" class="text-xs font-black text-amber-400">{{ $pctTps }}%</p>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2.5 overflow-hidden">
+                            <div id="fs-tps-progress-bar" class="h-1.5 rounded-full bg-amber-400 transition-all duration-700" style="width: {{ $pctTps }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 4. Suara Sah vs Tidak Sah --}}
+                <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 backdrop-blur-md shadow-xl flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[11px] font-extrabold text-purple-400 uppercase tracking-wider">Status Validitas</p>
+                        <span class="text-lg">⚖️</span>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-400 font-semibold">Suara Sah:</span>
+                            <span id="fs-suara-sah-count" class="font-extrabold text-emerald-400">{{ number_format($quickSuaraSah) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-400 font-semibold">Tidak Sah:</span>
+                            <span id="fs-suara-tidak-sah-count" class="font-extrabold text-rose-400">{{ number_format($quickSuaraTidakSah) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Main Data Section --}}
+            <div id="fs-quick-empty-state" class="{{ $hasQuickData ? 'hidden' : '' }} flex-1 bg-slate-900/50 border border-slate-800/60 rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+                <div class="w-24 h-24 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6 animate-pulse">
+                    <svg class="w-12 h-12 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-black text-white">Menunggu Data Quick Count Pertama Masuk</h3>
+                <p class="text-slate-400 text-sm max-w-md mt-2">Halaman fullscreen ini tetap live dan otomatis memuat perolehan suara secara real-time tanpa perlu refresh begitu saksi TPS mulai menginput.</p>
+            </div>
+
+            <div id="fs-quick-data-container" class="{{ $hasQuickData ? '' : 'hidden' }} flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                
+                {{-- Left Column: Large Candidate Cards (7 cols) --}}
+                <div class="lg:col-span-7 flex flex-col justify-center gap-4" id="fs-candidate-cards">
+                    {{-- Populated dynamically via JS --}}
+                </div>
+
+                {{-- Right Column: Live Donut Chart & Detailed Breakdown (5 cols) --}}
+                <div class="lg:col-span-5 bg-slate-900/70 border border-slate-800/80 rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl flex flex-col items-center justify-between">
+                    <div class="w-full text-center mb-2">
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Diagram Komposisi Perolehan</p>
+                        <h3 class="text-base font-extrabold text-white">Distribusi Suara Quick Count</h3>
+                    </div>
+
+                    {{-- Donut Chart with central counter --}}
+                    <div class="relative w-64 h-64 sm:w-72 sm:h-72 my-4 flex items-center justify-center flex-shrink-0">
+                        <canvas id="fsQuickPieChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Masuk</span>
+                            <span id="fs-live-quick-center-suara" class="text-2xl sm:text-3xl font-black text-white leading-tight">{{ number_format($quickSuaraMasuk) }}</span>
+                            <span class="text-[10px] font-bold text-indigo-400 mt-0.5">Suara Terkumpul</span>
+                        </div>
+                    </div>
+
+                    {{-- Mini legend --}}
+                    <div id="fs-legend-breakdown" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4 border-t border-slate-800/80">
+                        {{-- Populated by JS --}}
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        {{-- Footer Bar --}}
+        <div class="border-t border-slate-800/80 bg-slate-950/70 backdrop-blur-xl px-4 sm:px-8 py-3 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>© {{ date('Y') }} Sistem Rekap & Quick Count Suara Pemilihan</p>
+            <p class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Sinkronisasi Realtime Terakhir: <span id="fs-last-update-time" class="text-slate-300 font-mono font-bold">Baru saja</span>
+            </p>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // ===== LIVE QUICK COUNT REAL-TIME LOGIC =====
+    // ===== LIVE QUICK COUNT REAL-TIME & FULLSCREEN LOGIC =====
     let quickChart = null;
+    let fsQuickChart = null;
+
+    // Cache current live data object
+    let currentLiveQuickData = {
+        totalTps: {{ $totalTps }},
+        totalVoters: {{ $totalVoters }},
+        totalSupporters: {{ $totalSupporters }},
+        totalQuickSubmitted: {{ $totalQuickSubmitted }},
+        pctTps: {{ $pctTps }},
+        tpsBelumInput: {{ $tpsBelumInput }},
+        quickSuaraMasuk: {{ $quickSuaraMasuk }},
+        quickSuaraSah: {{ $quickSuaraSah }},
+        quickSuaraTidakSah: {{ $quickSuaraTidakSah }},
+        pctSuaraMasuk: {{ $pctSuaraMasuk }},
+        hasQuickData: {{ $hasQuickData ? 'true' : 'false' }},
+        quickPieLabels: @json($quickPieLabels),
+        quickPieData: @json($quickPieData),
+        quickPieColors: @json($quickPieColors),
+        candidateBreakdown: @json($candidateBreakdown),
+    };
 
     function escapeHtml(text) {
         if (!text) return '';
@@ -290,6 +493,21 @@
         return text.replace(/[&<>"']/g, m => map[m]);
     }
 
+    // --- Digital Clock Routine for Fullscreen View ---
+    function updateDigitalClock() {
+        const clockEl = document.getElementById('fs-digital-clock');
+        if (clockEl) {
+            const now = new Date();
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const secs = String(now.getSeconds()).padStart(2, '0');
+            clockEl.textContent = `${hrs}:${mins}:${secs} WIB`;
+        }
+    }
+    setInterval(updateDigitalClock, 1000);
+    updateDigitalClock();
+
+    // --- Main Dashboard Doughnut Chart ---
     function initOrUpdateQuickChart(labels, data, colors) {
         const pieCanvas = document.getElementById('quickPieChart');
         if (!pieCanvas) return;
@@ -349,6 +567,67 @@
         }
     }
 
+    // --- Fullscreen Doughnut Chart ---
+    function initOrUpdateFsQuickChart(labels, data, colors) {
+        const fsCanvas = document.getElementById('fsQuickPieChart');
+        if (!fsCanvas) return;
+
+        const hoverColors = colors.map(c => c + 'cc');
+
+        if (!fsQuickChart) {
+            fsQuickChart = new Chart(fsCanvas.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        hoverBackgroundColor: hoverColors,
+                        borderColor: '#0b1329',
+                        borderWidth: 4,
+                        hoverBorderWidth: 5,
+                        hoverOffset: 10,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    animation: {
+                        animateRotate: true,
+                        animateScale: false,
+                        duration: 600,
+                        easing: 'easeOutQuart',
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleColor: '#ffffff',
+                            bodyColor: '#cbd5e1',
+                            padding: 14,
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(ctx) {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct   = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.parsed.toLocaleString('id-ID')} suara (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            fsQuickChart.data.labels = labels;
+            fsQuickChart.data.datasets[0].data = data;
+            fsQuickChart.data.datasets[0].backgroundColor = colors;
+            fsQuickChart.data.datasets[0].hoverBackgroundColor = hoverColors;
+            fsQuickChart.update();
+        }
+    }
+
+    // --- Render Candidate Lists (Standard Dashboard) ---
     function renderCandidateList(candidates) {
         const container = document.getElementById('live-candidate-list');
         if (!container || !candidates) return;
@@ -375,12 +654,197 @@
         container.innerHTML = html;
     }
 
+    // --- Render Fullscreen Big Candidate Cards & Legend ---
+    function renderFsCandidateCards(candidates, quickSuaraMasuk) {
+        const cardsContainer = document.getElementById('fs-candidate-cards');
+        const legendContainer = document.getElementById('fs-legend-breakdown');
+        if (!cardsContainer || !candidates) return;
+
+        const maxVotes = Math.max(...candidates.map(c => c.suara), 0);
+        let cardsHtml = '';
+        let legendHtml = '';
+
+        candidates.forEach(c => {
+            const isLeading = maxVotes > 0 && c.suara === maxVotes;
+            const nomorFormatted = String(c.nomor_urut).padStart(2, '0');
+
+            cardsHtml += `
+            <div class="relative bg-slate-900/85 border ${isLeading ? 'border-amber-500/60 shadow-amber-500/10' : 'border-slate-800'} rounded-3xl p-5 sm:p-6 shadow-xl backdrop-blur-md overflow-hidden transition-all duration-300">
+                ${isLeading ? `
+                <div class="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-amber-600 text-slate-950 font-black text-[10px] sm:text-xs px-3.5 py-1 rounded-bl-2xl uppercase tracking-wider shadow-md flex items-center gap-1.5">
+                    <span>👑 Unggul Sementara</span>
+                </div>` : ''}
+
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl text-white shadow-lg flex-shrink-0" style="background-color: ${c.warna}">
+                        ${nomorFormatted}
+                    </div>
+                    <div class="flex-1 min-w-0 pr-12">
+                        <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Pasangan Calon No. ${c.nomor_urut}</p>
+                        <h4 class="text-base sm:text-lg font-black text-white truncate tracking-tight">${escapeHtml(c.nama)}</h4>
+                    </div>
+                </div>
+                
+                <div class="flex items-end justify-between gap-4 mb-2.5">
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Perolehan Suara</p>
+                        <p class="text-2xl sm:text-3xl font-black text-white tracking-tight">${c.suara.toLocaleString('id-ID')} <span class="text-xs sm:text-sm font-semibold text-slate-400">suara</span></p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block text-base sm:text-xl font-black px-3.5 py-1 rounded-xl text-white shadow-md" style="background-color: ${c.warna}">
+                            ${c.pct}%
+                        </span>
+                    </div>
+                </div>
+
+                <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-700/50">
+                    <div class="h-2 rounded-full transition-all duration-700 shadow-sm" style="width: ${Math.min(100, c.pct)}%; background-color: ${c.warna}"></div>
+                </div>
+            </div>`;
+
+            legendHtml += `
+            <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-800/60 border border-slate-800 text-xs">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${c.warna}"></span>
+                <span class="text-slate-300 font-bold truncate flex-1">No. ${c.nomor_urut} - ${escapeHtml(c.nama)}</span>
+                <span class="text-white font-black">${c.pct}%</span>
+            </div>`;
+        });
+
+        cardsContainer.innerHTML = cardsHtml;
+        if (legendContainer) legendContainer.innerHTML = legendHtml;
+    }
+
+    // --- Update Fullscreen UI Elements ---
+    function updateFullscreenUI(data) {
+        if (!data) return;
+
+        // 1. Update KPI Summary Cards
+        const suaraMasukCount = document.getElementById('fs-suara-masuk-count');
+        if (suaraMasukCount) suaraMasukCount.textContent = data.quickSuaraMasuk.toLocaleString('id-ID');
+
+        const partisipasiPct = document.getElementById('fs-partisipasi-pct');
+        if (partisipasiPct) partisipasiPct.textContent = `${data.pctSuaraMasuk}%`;
+
+        const totalVotersCount = document.getElementById('fs-total-voters-count');
+        if (totalVotersCount) totalVotersCount.textContent = data.totalVoters.toLocaleString('id-ID');
+
+        const partisipasiBar = document.getElementById('fs-partisipasi-bar');
+        if (partisipasiBar) partisipasiBar.style.width = `${Math.min(100, data.pctSuaraMasuk)}%`;
+
+        const tpsSubmitted = document.getElementById('fs-tps-submitted-count');
+        if (tpsSubmitted) tpsSubmitted.textContent = data.totalQuickSubmitted;
+
+        const totalTps = document.getElementById('fs-total-tps-count');
+        if (totalTps) totalTps.textContent = data.totalTps;
+
+        const tpsPct = document.getElementById('fs-tps-pct');
+        if (tpsPct) tpsPct.textContent = `${data.pctTps}%`;
+
+        const tpsProgBar = document.getElementById('fs-tps-progress-bar');
+        if (tpsProgBar) tpsProgBar.style.width = `${data.pctTps}%`;
+
+        const suaraSah = document.getElementById('fs-suara-sah-count');
+        if (suaraSah) suaraSah.textContent = data.quickSuaraSah.toLocaleString('id-ID');
+
+        const suaraTidakSah = document.getElementById('fs-suara-tidak-sah-count');
+        if (suaraTidakSah) suaraTidakSah.textContent = data.quickSuaraTidakSah.toLocaleString('id-ID');
+
+        // 2. Toggle Empty State vs Data Container
+        const emptyState = document.getElementById('fs-quick-empty-state');
+        const dataContainer = document.getElementById('fs-quick-data-container');
+
+        if (data.hasQuickData) {
+            if (emptyState) emptyState.classList.add('hidden');
+            if (dataContainer) dataContainer.classList.remove('hidden');
+
+            renderFsCandidateCards(data.candidateBreakdown, data.quickSuaraMasuk);
+            initOrUpdateFsQuickChart(data.quickPieLabels, data.quickPieData, data.quickPieColors);
+
+            const centerSuara = document.getElementById('fs-live-quick-center-suara');
+            if (centerSuara) centerSuara.textContent = data.quickSuaraMasuk.toLocaleString('id-ID');
+        } else {
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (dataContainer) dataContainer.classList.add('hidden');
+        }
+
+        // Update Last Sync Timestamp
+        const lastUpdateEl = document.getElementById('fs-last-update-time');
+        if (lastUpdateEl) {
+            const now = new Date();
+            lastUpdateEl.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')} WIB`;
+        }
+    }
+
+    // --- Fullscreen Toggle Logic ---
+    function openQuickCountFullscreen() {
+        const overlay = document.getElementById('quickCountFullscreenOverlay');
+        if (!overlay) return;
+
+        overlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // Trigger native browser fullscreen
+        if (overlay.requestFullscreen) {
+            overlay.requestFullscreen().catch(() => {});
+        } else if (overlay.webkitRequestFullscreen) {
+            overlay.webkitRequestFullscreen().catch(() => {});
+        } else if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
+
+        // Update Fullscreen UI immediately with cached data
+        updateFullscreenUI(currentLiveQuickData);
+    }
+
+    function closeQuickCountFullscreen() {
+        const overlay = document.getElementById('quickCountFullscreenOverlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
+        document.body.style.overflow = '';
+
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen().catch(() => {});
+            }
+        }
+    }
+
+    // Listen for browser ESC / exit fullscreen events
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            const overlay = document.getElementById('quickCountFullscreenOverlay');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+        if (!document.webkitFullscreenElement) {
+            const overlay = document.getElementById('quickCountFullscreenOverlay');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeQuickCountFullscreen();
+        }
+    });
+
+    // Initial Initializations
     @if($hasQuickData)
-    // Initial Chart Render
     initOrUpdateQuickChart(@json($quickPieLabels), @json($quickPieData), @json($quickPieColors));
+    updateFullscreenUI(currentLiveQuickData);
     @endif
 
-    // Live Polling Routine
+    // ===== Real-time Polling Routine =====
     async function updateDashboardLive() {
         if (document.hidden) return; // Pause polling when tab is inactive
 
@@ -394,12 +858,13 @@
 
             if (!response.ok) return;
             const data = await response.json();
+            currentLiveQuickData = data;
 
             // 1. Update Header Summary
             const tpsSummary = document.getElementById('live-tps-summary');
             if (tpsSummary) tpsSummary.textContent = `${data.totalQuickSubmitted} dari ${data.totalTps} TPS`;
 
-            // 2. Toggle Empty State vs Chart Container
+            // 2. Toggle Standard Empty State vs Chart Container
             const emptyState = document.getElementById('quick-empty-state');
             const chartContainer = document.getElementById('quick-chart-container');
 
@@ -467,6 +932,9 @@
 
             const statSuaraTidakSah = document.getElementById('live-suara-tidak-sah-count');
             if (statSuaraTidakSah) statSuaraTidakSah.textContent = data.quickSuaraTidakSah.toLocaleString('id-ID');
+
+            // 5. Update Fullscreen View
+            updateFullscreenUI(data);
 
         } catch (e) {
             console.error('Error fetching dashboard live data:', e);

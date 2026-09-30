@@ -87,6 +87,7 @@ class DashboardController extends Controller
                 'id' => $candidate->id,
                 'nomor_urut' => $candidate->nomor_urut,
                 'nama' => $candidate->nama,
+                'is_main_candidate' => (bool) $candidate->is_main_candidate,
                 'warna' => $color,
                 'suara' => (int) $suara,
                 'suara_formatted' => number_format((int)$suara),
