@@ -35,6 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Input Hasil Real Pemilihan tiap TPS (Real Count)
     Route::get('/realcount', [RealCountController::class, 'index'])->name('realcount.index');
     Route::put('/realcount/{tp}', [RealCountController::class, 'update'])->name('realcount.update');
+    Route::delete('/realcount/{tp}/reset', [RealCountController::class, 'reset'])->name('realcount.reset');
 
     // Rekap Hasil Pemilih Real vs Data Pendukung tiap TPS
     Route::get('/rekap-real', [RekapRealController::class, 'index'])->name('rekap-real.index');

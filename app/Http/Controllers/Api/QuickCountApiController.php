@@ -370,4 +370,35 @@ class QuickCountApiController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Reset / Hapus Hasil Quick Count sebuah TPS via API.
+     * DELETE /api/quickcount/{tps}/reset atau POST /api/quickcount/{tps}/reset
+     */
+    public function reset(Request $request, Tps $tps)
+    {
+        $user = $request->user();
+        if ($user && $user->isSaksi() && $user->tps_id !== $tps->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Anda hanya berhak mereset data TPS yang ditugaskan kepada Anda.',
+            ], 403);
+        }
+
+        TpsQuickCandidateResult::where('tps_id', $tps->id)->delete();
+
+        $tps->update([
+            'quick_suara_kandidat'  => 0,
+            'quick_suara_lawan'     => 0,
+            'quick_suara_tidak_sah' => 0,
+            'quick_catatan_saksi'   => null,
+            'quick_is_submitted'    => false,
+            'quick_waktu_input'     => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Data Quick Count untuk {$tps->nama_tps} berhasil direset.",
+        ]);
+    }
 }

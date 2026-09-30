@@ -194,4 +194,33 @@ class RealCountController extends Controller
 
         return redirect()->back()->with('success', "Hasil suara real untuk {$tp->nama_tps} berhasil disimpan.");
     }
+
+    /**
+     * Reset / Hapus Hasil Real Count sebuah TPS
+     * Admin dapat mereset semua TPS, Saksi hanya bisa mereset TPS miliknya.
+     */
+    public function reset(Request $request, Tps $tp)
+    {
+        $user = $request->user();
+
+        // Otorisasi: saksi hanya bisa reset TPS miliknya
+        if ($user->isSaksi() && $user->tps_id !== $tp->id) {
+            return redirect()->back()->with('error', 'Anda hanya berhak mereset data TPS yang ditugaskan kepada Anda.');
+        }
+
+        // Hapus data pivot real count per kandidat
+        TpsCandidateResult::where('tps_id', $tp->id)->delete();
+
+        // Reset kolom real count di tabel tps
+        $tp->update([
+            'suara_kandidat'   => 0,
+            'suara_lawan'      => 0,
+            'suara_tidak_sah'  => 0,
+            'catatan_saksi'    => null,
+            'is_submitted'     => false,
+            'waktu_input_real' => null,
+        ]);
+
+        return redirect()->back()->with('success', "Data Real Count untuk {$tp->nama_tps} berhasil direset.");
+    }
 }

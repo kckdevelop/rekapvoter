@@ -38,16 +38,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardApiController::class, 'index']);
 
     // ── Quick Count (Fitur Hitung Cepat TPS) ──────────────────────────────────
-    Route::get('/quickcount',          [QuickCountApiController::class, 'index']);
-    Route::get('/quickcount/summary',  [QuickCountApiController::class, 'summary']);
-    Route::get('/quickcount/{tps}',    [QuickCountApiController::class, 'show']);
-    Route::post('/quickcount/{tps}',   [QuickCountApiController::class, 'submit']);
+    Route::get('/quickcount',              [QuickCountApiController::class, 'index']);
+    Route::get('/quickcount/summary',      [QuickCountApiController::class, 'summary']);
+    Route::get('/quickcount/{tps}',        [QuickCountApiController::class, 'show']);
+    Route::post('/quickcount/{tps}',       [QuickCountApiController::class, 'submit']);
+    Route::delete('/quickcount/{tps}/reset', [QuickCountApiController::class, 'reset']);
+    Route::post('/quickcount/{tps}/reset',   [QuickCountApiController::class, 'reset']);
 
     // ── Real Count (Fitur Hitung Real C1 TPS) ────────────────────────────────
-    Route::get('/realcount',          [RealCountApiController::class, 'index']);
-    Route::get('/realcount/summary',  [RealCountApiController::class, 'summary']);
-    Route::get('/realcount/{tps}',    [RealCountApiController::class, 'show']);
-    Route::post('/realcount/{tps}',   [RealCountApiController::class, 'submit']);
+    Route::get('/realcount',              [RealCountApiController::class, 'index']);
+    Route::get('/realcount/summary',      [RealCountApiController::class, 'summary']);
+    Route::get('/realcount/{tps}',        [RealCountApiController::class, 'show']);
+    Route::post('/realcount/{tps}',       [RealCountApiController::class, 'submit']);
+    Route::delete('/realcount/{tps}/reset', [RealCountApiController::class, 'reset']);
+    Route::post('/realcount/{tps}/reset',   [RealCountApiController::class, 'reset']);
 
     // ── TPS ─────────────────────────────────────────────────────────────────
     Route::get('/tps',       [TpsApiController::class, 'index']);

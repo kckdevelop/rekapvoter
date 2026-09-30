@@ -12,7 +12,11 @@
         editName: '',
         editVotes: {},
         editTidakSah: 0,
-        editCatatan: ''
+        editCatatan: '',
+
+        resetModalOpen: false,
+        resetId: null,
+        resetName: ''
      }"
      @open-realcount-modal.window="
         editModalOpen = true;
@@ -21,6 +25,11 @@
         editVotes = $event.detail.votes || {};
         editTidakSah = $event.detail.tidak_sah || 0;
         editCatatan = $event.detail.catatan || '';
+     "
+     @open-reset-modal.window="
+        resetModalOpen = true;
+        resetId = $event.detail.id;
+        resetName = $event.detail.name;
      ">
 
     {{-- Alert Notification --}}
@@ -31,6 +40,15 @@
                 <span>{{ session('success') }}</span>
             </div>
             <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700">✕</button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-900 text-sm font-bold flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 text-rose-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-5a1 1 0 102 0V9a1 1 0 10-2 0v4zm1-8a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clip-rule="evenodd"/></svg>
+                <span>{{ session('error') }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-700">✕</button>
         </div>
     @endif
 
@@ -246,18 +264,35 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button type="button"
-                                    @click="$dispatch('open-realcount-modal', {
-                                        id: {{ $tps->id }},
-                                        name: '{{ addslashes($tps->nama_tps) }}',
-                                        votes: {{ json_encode($votesMap) }},
-                                        tidak_sah: {{ $tps->suara_tidak_sah ?? 0 }},
-                                        catatan: '{{ addslashes($tps->catatan_saksi ?? '') }}'
-                                    })"
-                                    class="inline-flex items-center gap-1 text-xs bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-3 py-2 rounded-xl transition-colors shadow-sm cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                <span>{{ $tps->is_submitted ? 'Edit Hasil' : 'Input Hasil' }}</span>
-                            </button>
+                            <div class="flex items-center justify-end gap-2">
+                                {{-- Tombol Input / Edit Hasil --}}
+                                <button type="button"
+                                        @click="$dispatch('open-realcount-modal', {
+                                            id: {{ $tps->id }},
+                                            name: '{{ addslashes($tps->nama_tps) }}',
+                                            votes: {{ json_encode($votesMap) }},
+                                            tidak_sah: {{ $tps->suara_tidak_sah ?? 0 }},
+                                            catatan: '{{ addslashes($tps->catatan_saksi ?? '') }}'
+                                        })"
+                                        class="inline-flex items-center gap-1 text-xs bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-3 py-2 rounded-xl transition-colors shadow-sm cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    <span>{{ $tps->is_submitted ? 'Edit Hasil' : 'Input Hasil' }}</span>
+                                </button>
+
+                                {{-- Tombol Reset (hanya muncul jika sudah ada data) --}}
+                                @if($tps->is_submitted)
+                                <button type="button"
+                                        @click="$dispatch('open-reset-modal', {
+                                            id: {{ $tps->id }},
+                                            name: '{{ addslashes($tps->nama_tps) }}'
+                                        })"
+                                        title="Reset data Real Count {{ $tps->nama_tps }}"
+                                        class="inline-flex items-center gap-1 text-xs bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white font-extrabold px-3 py-2 rounded-xl transition-all border border-rose-200 hover:border-rose-600 shadow-sm cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <span>Reset</span>
+                                </button>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -357,6 +392,52 @@
                         Simpan Hasil Real
                     </button>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ===== MODAL KONFIRMASI RESET REAL COUNT ===== --}}
+    <div x-show="resetModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md"
+         style="display: none;">
+
+        <div @click.away="resetModalOpen = false"
+             class="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-md p-7 space-y-5">
+
+            {{-- Header --}}
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 flex-shrink-0 rounded-2xl bg-rose-100 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-extrabold text-slate-900 text-base">Konfirmasi Reset Real Count</h3>
+                    <p class="text-slate-500 text-xs mt-1">Tindakan ini akan <span class="font-extrabold text-rose-600">menghapus seluruh data</span> hasil real pemilihan pada:</p>
+                    <p class="mt-2 text-sm font-extrabold text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded-xl" x-text="resetName"></p>
+                    <p class="text-[11px] text-slate-400 mt-2">⚠️ Data perolehan suara sah tiap calon, suara tidak sah, serta catatan saksi akan direset ke 0 dan status TPS akan kembali ke <strong>Belum Input</strong>. Tindakan ini tidak dapat dibatalkan.</p>
+                </div>
+            </div>
+
+            {{-- Form Reset --}}
+            <form :action="'/realcount/' + resetId + '/reset'" method="POST" class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+                @csrf
+                @method('DELETE')
+                <button type="button" @click="resetModalOpen = false"
+                        class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition-colors">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm transition-colors shadow-md shadow-rose-900/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Ya, Reset Real Count
+                </button>
             </form>
         </div>
     </div>

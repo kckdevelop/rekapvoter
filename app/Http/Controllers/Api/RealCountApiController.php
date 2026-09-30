@@ -369,4 +369,35 @@ class RealCountApiController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Reset / Hapus Hasil Real Count sebuah TPS via API.
+     * DELETE /api/realcount/{tps}/reset atau POST /api/realcount/{tps}/reset
+     */
+    public function reset(Request $request, Tps $tps)
+    {
+        $user = $request->user();
+        if ($user && $user->isSaksi() && $user->tps_id !== $tps->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Anda hanya berhak mereset data TPS yang ditugaskan kepada Anda.',
+            ], 403);
+        }
+
+        TpsCandidateResult::where('tps_id', $tps->id)->delete();
+
+        $tps->update([
+            'suara_kandidat'   => 0,
+            'suara_lawan'      => 0,
+            'suara_tidak_sah'  => 0,
+            'catatan_saksi'    => null,
+            'is_submitted'     => false,
+            'waktu_input_real' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Data Real Count untuk {$tps->nama_tps} berhasil direset.",
+        ]);
+    }
 }
