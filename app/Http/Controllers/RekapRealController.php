@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Candidate;
 use App\Models\Tps;
 use App\Models\TpsCandidateResult;
+use Illuminate\Http\Request;
 
 class RekapRealController extends Controller
 {
